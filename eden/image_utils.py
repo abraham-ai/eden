@@ -44,7 +44,7 @@ def encode(image):
             # print('its a pil image ')
             image_as_text = _encode_pil_image(image)
 
-        return image_as_text
+        return image_as_text.decode('ascii')
 
     else:
         raise Exception('expected numpy.array, PIL.Image or str, not: ',  str(type(image)))
