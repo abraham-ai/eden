@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from .log_utils import Colors
 from uvicorn.config import LOGGING_CONFIG
+from .utils import parse_for_taking_request
 
 def host_block(block,  port = 8080):
     app =  FastAPI()
@@ -21,7 +22,9 @@ def host_block(block,  port = 8080):
     @app.post('/run')
     def run(args : block.data_model):
         try:            
-            output = block.__run__(dict(args))
+            args = dict(args)
+            args = parse_for_taking_request(args)
+            output = block.__run__(args)
             return {
                 'run': 'run successful',
                 'output': output

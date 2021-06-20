@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from pydantic import create_model
+from .datatypes import Image
 
 class BaseBlock(object):
     def __init__(self):
@@ -8,10 +9,17 @@ class BaseBlock(object):
         self.__setup__ = None
         self.default_args = None
         self.data_model = None
+
+    def create_default_data_fields(self):
+
+        for key, value in self.default_args.items():
+            if isinstance(value, Image):
+                self.default_args[key] = value.__call__()
     
     def build_pydantic_model(self):
-        
+         
         if self.default_args is not None:
+            self.create_default_data_fields()
             self.data_model = create_model('config', **self.default_args, username = '')
         else:
             raise Exception('default_args are not defined for block.run')
