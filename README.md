@@ -17,7 +17,7 @@ The first step is to configure `setup()` and `run()`.
 
 ```python 
 from eden.block import BaseBlock
-from eden.image_utils import encode, decode
+from eden.datatypes import Image
 
 eden_block = BaseBlock()
 
@@ -28,23 +28,22 @@ def some_setup():
 
 `run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports any number of text and image inputs.
 
-> **Note:** `decode()` is compatible with `Base64` encoded bytes-like object or ASCII strings. It's meant to work with `encode()`. 
-
 ```python 
 my_args = {
         'prompt': 'hello world', ## text input
-        'input_image': '',       ## for image input, it can be left empty
+        'input_image': Image(),  ## for image input
     }
 
 @eden_block.run(args = my_args)
 def do_something(config): 
 
-    pil_image = decode(config['input_image'])
+    # print('doing something for: ', config['username'])
+    pil_image = config['input_image']
     # do something with your image/text inputs here 
 
     return {
         'prompt': config['prompt'],  ## returning text
-        'image': encode(pil_image)   ## encode() works on PIL.Image, numpy.array and on jpg an png files
+        'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
 ```
 
@@ -65,26 +64,25 @@ A `Client` is the entity that sends requests to a block to generate art. It requ
 
 ```python
 from eden.client import Client
-from eden.image_utils import decode, encode
+from eden.datatypes import Image
 
-c = Client(url = 'http://127.0.0.1:5656', username= 'abraham') ## username is optional
+c = Client(url = 'http://127.0.0.1:5656', username= 'abraham')
 
 setup_response = c.setup()
 ```
 
 Fetching results and saving images
 
-> **Note**: `encode()` is compatible with following types: `PIL.Image`, `numpy.array` and filenames (`str`) ending with `.jpg` or `.png`
+> **Note**: `Image()` is compatible with following types: `PIL.Image`, `numpy.array` and filenames (`str`) ending with `.jpg` or `.png`
 
 ```python
 config = {
-    'prompt': 'let there be light',  ## sample text input
-    'input_image': encode('test_images/krusty_krab.png')  ## encode() supports jpg, png files, np.array or PIL.Image
+    'prompt': 'let there be light',
+    'input_image': Image('test_images/krusty_krab.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
 }
 
 run_response = c.run(config)
 
-# convert back to PIL and save the image
-pil_image = decode(run_response['output']['image'])
-pil_image.save('from_server.png')
+pil_image = run_response['output']['image']
+pil_image.save('saved_from_server.png')
 ```
