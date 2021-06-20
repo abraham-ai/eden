@@ -1,35 +1,32 @@
 from eden.block import BaseBlock
-from eden.hosting import host_block
 from eden.image_utils import encode, decode
 
-my_block = BaseBlock()
+eden_block = BaseBlock()
 
-@my_block.setup
+@eden_block.setup
 def some_setup():
-    pass
-    # print('setup complete')
+    pass  ## your setup goes here
 
-@my_block.run(
-    args = {
-        'prompt': 'hello world', ## default args
-        'input_image': '',       ## leaving this empty works too
+my_args = {
+        'prompt': 'hello world', ## text input
+        'input_image': '',       ## for image input, it can be left empty
     }
-)
+
+@eden_block.run(args = my_args)
 def do_something(config): 
 
-    print('doing something for: ', config['username'])
+    # print('doing something for: ', config['username'])
     pil_image = decode(config['input_image'])
-
     # do something with your image/text inputs here 
 
     return {
-        'prompt': config['prompt'],
-        'image': encode(pil_image)
+        'prompt': config['prompt'],  ## returning text
+        'image': encode(pil_image)   ## encode() works on PIL.Image, numpy.array and on jpg an png files
     }
 
-if __name__ == '__main__':
+from eden.hosting import host_block
 
-    host_block(
-        block = my_block, 
-        port= 5656
-    )
+host_block(
+    block = eden_block, 
+    port= 5656
+)
