@@ -1,5 +1,5 @@
 from eden.block import BaseBlock
-from eden.image_utils import encode, decode
+from eden.datatypes import Image
 
 eden_block = BaseBlock()
 
@@ -9,19 +9,19 @@ def some_setup():
 
 my_args = {
         'prompt': 'hello world', ## text input
-        'input_image': '',       ## for image input, it can be left empty
+        'input_image': Image(),  ## for image input
     }
 
 @eden_block.run(args = my_args)
 def do_something(config): 
 
     # print('doing something for: ', config['username'])
-    pil_image = decode(config['input_image'])
+    pil_image = config['input_image']
     # do something with your image/text inputs here 
 
     return {
         'prompt': config['prompt'],  ## returning text
-        'image': encode(pil_image)   ## encode() works on PIL.Image, numpy.array and on jpg an png files
+        'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
 
 from eden.hosting import host_block
