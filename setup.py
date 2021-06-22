@@ -9,10 +9,24 @@ with open('requirements.txt') as f:
 setuptools.setup(
     name="eden",
     version="0.0.0",
-    setup_requires=['wheel'],
+    author="", 
+    author_email="", 
+    description= "",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/abraham-ai/eden",
+    packages=setuptools.find_packages(),
     install_requires= required,
     python_requires='>=3.6',   
     include_package_data=True,
-    long_description=long_description,
-    long_description_content_type="text/markdown",
+    keywords=[
+        "machine learning",
+        "neural networks",
+        ],
+    classifiers=[
+        "Intended Audience :: Science/Research",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ] 
 )
