@@ -12,8 +12,11 @@ class Client(object):
         resp = requests.post(self.url + '/run', json=config)
         resp = resp.json()
 
-        resp = parse_response_after_run(resp)
-        return resp
+        try:
+            resp = parse_response_after_run(resp)
+            return resp
+        except KeyError:
+            return resp
 
     def setup(self):
         resp = requests.get(self.url + '/setup')

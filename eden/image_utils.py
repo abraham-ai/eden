@@ -32,9 +32,9 @@ def _encode_pil_image(image):
 
 def encode(image):
 
-    if type(image) == np.array or type(image) == str or isinstance(image, (PIL.JpegImagePlugin.JpegImageFile, PIL.PngImagePlugin.PngImageFile)):
+    if type(image) == np.ndarray or type(image) == str or isinstance(image, (PIL.JpegImagePlugin.JpegImageFile, PIL.PngImagePlugin.PngImageFile, PIL.Image)):
 
-        if type(image) == np.array:
+        if type(image) == np.ndarray:
             image_as_text = _encode_numpy_array_image(image)
 
         elif  type(image) == str:
