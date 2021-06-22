@@ -9,5 +9,10 @@ with open('requirements.txt') as f:
 setuptools.setup(
     name="eden",
     version="0.0.0",
-    setup_requires=['wheel']
+    setup_requires=['wheel'],
+    install_requires= required,
+    python_requires='>=3.6',   
+    include_package_data=True,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
 )
