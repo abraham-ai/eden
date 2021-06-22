@@ -8,20 +8,23 @@ def some_setup():
     pass  ## your setup goes here
 
 my_args = {
-        'prompt': 'hello world', ## text input
-        'input_image': Image(),  ## for image input
+        'prompt': 'let there be light', ## text
+        'number': 12345,                ## numbers 
+        'input_image': Image()          ## image requires Image()
     }
 
 @eden_block.run(args = my_args)
 def do_something(config): 
 
-    # print('doing something for: ', config['username'])
     pil_image = config['input_image']
-    # do something with your image/text inputs here 
+    some_number = config['number']
+
+    # do something with your inputs here 
 
     return {
         'prompt': config['prompt'],  ## returning text
-        'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
+        'number': some_number,       ## returning numbers
+        'image': Image(pil_image)    ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
 
 from eden.hosting import host_block
