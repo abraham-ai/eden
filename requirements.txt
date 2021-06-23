@@ -5,7 +5,7 @@ click>=8.0.1
 fastapi>=0.65.2
 h11>=0.12.0
 idna>=3.2
-numpy>=1.20.3
+numpy
 opencv-python>=4.5.2.54
 Pillow>=8.2.0
 pydantic>=1.8.2
