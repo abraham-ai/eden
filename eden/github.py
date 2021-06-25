@@ -10,13 +10,26 @@ class GithubSource(object):
         self.config = None
 
     def clone(self):
+        """
+        Clones the repo specified in `self.url`
+        """
         git.Git(self.folder_path).clone(self.url)
         self.root = self.folder_path + "/" + self.repo_foldername
 
     def nav_into_repo(self):
+        """
+        navigates into the repository's root folder.
+        """
         os.chdir(self.root)
 
     def get_eden_yml(self):
+        """
+        Looks for the eden.yml file which contains all the 
+        commands needed to build and host a block.
+
+        Raises:
+            FileNotFoundError: Raised when `eden.yml` file is not found.
+        """
         try:
             with open("eden.yml", 'r') as stream:
                 self.config = yaml.safe_load(stream)
@@ -25,6 +38,9 @@ class GithubSource(object):
             raise FileNotFoundError('The repo does not contain an "eden.yml" file :(')
 
     def build(self):
+        """
+        Runs the commands listed under the build section in the eden.yml file.
+        """
         if self.config is not None:
             print('starting build...')
             for i in range(len(self.config['build'])):
@@ -33,6 +49,9 @@ class GithubSource(object):
                 os.system(command)
 
     def run(self):
+        """
+        Runs the commands listed under the run section in the eden.yml file.
+        """
         if self.config is not None:
             print('starting run...')
             for i in range(len(self.config['run'])):
