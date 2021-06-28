@@ -1,6 +1,9 @@
 from .datatypes import Image
 from .image_utils import decode
 
+import json
+import time
+
 def parse_for_sending_request(config: dict = {}):
     for key, value in config.items():
         
@@ -31,25 +34,50 @@ def parse_for_taking_request(response: dict = {}):
 
 def parse_response_after_run(response: dict = {}):
 
-    resp_out = response['output']
 
-    for key, value in resp_out.items():
+    if 'output' in list(response.keys()):
+        resp_out = response['output']
 
-        if isinstance(value, dict):
-            if 'type' in list(value.keys()):
-                
-                if value['type'] == 'eden.datatypes.Image':
-                    resp_out[key] = decode(resp_out[key]['data'])
+        for key, value in resp_out.items():
 
-                '''
-                as we add more datatypes, just add them in here like: 
+            if isinstance(value, dict):
+                if 'type' in list(value.keys()):
+                    
+                    if value['type'] == 'eden.datatypes.Image':
+                        resp_out[key] = decode(resp_out[key]['data'])
 
-                if value['type'] == 'eden.datatypes.some_type':
-                    resp_out[key] = decode_some_type(resp_out[key]['data'])
+                    '''
+                    as we add more datatypes, just add them in here like: 
 
-                '''
+                    if value['type'] == 'eden.datatypes.some_type':
+                        resp_out[key] = decode_some_type(resp_out[key]['data'])
 
-    response['output'] = resp_out
+                    '''
+
+        response['output'] = resp_out
     return response
 
 
+def write_json(dictionary: dict, path:str):
+    with open(path, "w") as write_file:
+        json.dump(dictionary, write_file, indent=4)
+
+def make_filename_and_id(results_dir, username):
+    id = make_id(username)
+    filename = results_dir + "/" + id + '.json'
+    # print("filename:  ", filename)
+    return filename, id
+
+def make_id(username):
+    id = username + "_"+ str(int(time.time()))
+    return id
+
+def get_filename_from_id(results_dir, id):
+    filename = results_dir + "/" + id + '.json'
+    return filename
+
+def load_json(filename):
+    with open(filename) as json_file:
+        data = json.load(json_file)
+    
+    return data 
