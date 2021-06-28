@@ -71,18 +71,23 @@ c = Client(url = 'http://127.0.0.1:5656', username= 'abraham')
 setup_response = c.setup()
 ```
 
-Fetching results and saving images
+After you start a task as shown below, it returns a token as `run_response['token']`. This token should be used later on to check the task status or to obtain results.
 
 > **Note**: `Image()` is compatible with following types: `PIL.Image`, `numpy.array` and filenames (`str`) ending with `.jpg` or `.png`
 
 ```python
 config = {
     'prompt': 'let there be light',
+    'number': 2233,
     'input_image': Image('test_images/krusty_krab.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
 }
 
 run_response = c.run(config)
+```
 
-pil_image = run_response['output']['image']
-pil_image.save('saved_from_server.png')
+Fetching results/checking task status using the token can be done using `fetch()`. If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. If it's not complete, it returns `{'status': 'running'}`
+
+```python
+results = c.fetch(token = run_response['token'])
+print(results)  
 ```
