@@ -53,7 +53,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
         filename, token = make_filename_and_id(results_dir = results_dir, username = args.username)
 
         status = {
-            'status': 'running',
+            'status': 'started',
             'token': token
         }
 
@@ -74,7 +74,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
         if os.path.exists(file_path):
             results = load_json(file_path)
 
-            if results != {'status': 'running','token': token}:
+            if results != {'status': 'started','token': token}:
                 return {
                     'status': 'completed',
                     'output': results 
