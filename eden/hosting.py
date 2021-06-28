@@ -82,7 +82,6 @@ def host_block(block,  port = 8080, results_dir = 'results'):
             else:
                 return {
                     'status': 'running',
-                    'token': token
                 }
 
         else:
