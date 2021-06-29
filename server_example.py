@@ -1,7 +1,7 @@
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
-eden_block = BaseBlock()
+eden_block = BaseBlock(max_gpu_load= 0.5, max_gpu_mem= 0.5)
 
 @eden_block.setup
 def some_setup():
@@ -20,7 +20,7 @@ def do_something(config):
     some_number = config['number']
     gpu_id = config['__gpu__']
 
-    # do something with your inputs here 
+    # do something here
 
     return {
         'prompt': config['prompt'],  ## returning text
