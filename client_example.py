@@ -29,9 +29,11 @@ one eternity later
 import time
 time.sleep(5)
 
-
 '''
-task should be complete by now, this time fetch() returns the output as: {'status': 'complete', 'output': {your_outputs}}
+if the task is complete: 
+    returns {'status': 'complete', 'output': {your_outputs}}
+else
+    returns {'status': 'running'}
 '''
 results = c.fetch(token = run_response['token'])
 pil_image = results['output']['image']
