@@ -18,6 +18,7 @@ def do_something(config):
 
     pil_image = config['input_image']
     some_number = config['number']
+    gpu_id = config['__gpu__']
 
     # do something with your inputs here 
 
