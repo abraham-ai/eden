@@ -33,15 +33,10 @@ def host_block(block,  port = 8080, results_dir = 'results'):
             }
 
 
-    def run(args, filename):
+    def run(args, filename, gpu_id):
         args = dict(args)
         args = parse_for_taking_request(args)
-
-        '''
-        allocating a GPU ID to the tast based on usage
-        for now let's settle for max 1 GPU per task :(
-        '''
-        gpu_id = GPUtil.getAvailable(order = 'first', limit = 1, maxLoad = block.max_gpu_load, maxMemory = block.max_gpu_mem, includeNan=False, excludeID=[], excludeUUID=[])[0]
+        
         args['__gpu__'] = 'cuda:' + str(gpu_id)
         
         try:
@@ -62,17 +57,37 @@ def host_block(block,  port = 8080, results_dir = 'results'):
     def start_run(args: block.data_model, background_tasks: BackgroundTasks):
         filename, token = make_filename_and_id(results_dir = results_dir, username = args.username)
 
-        status = {
-            'status': 'started',
-            'token': token
-        }
+        '''
+        allocating a GPU ID to the tast based on usage
+        for now let's settle for max 1 GPU per task :(
+        '''
+        available_gpu_ids = GPUtil.getAvailable(order = 'first', limit = 1, maxLoad = block.max_gpu_load, maxMemory = block.max_gpu_mem, includeNan=False, excludeID=[], excludeUUID=[])
 
-        write_json(
-            dictionary = status,  
-            path = filename
-        )
+        '''
+        If there are no GPUs available, then it returns a sad message.
+        But if there ARE GPUs available, then it starts run()
+        '''
+        if len(available_gpu_ids) == 0:
+            status = {
+                'status': 'No GPUs are available at the moment, please try again later',
+                'token': token
+            }
 
-        background_tasks.add_task(run, args = args, filename =filename)
+            return status
+        else:
+            gpu_id = available_gpu_ids[0]
+            background_tasks.add_task(run, args = args, filename =filename, gpu_id = gpu_id)
+
+            status = {
+                'status': 'started',
+                'token': token
+            }
+
+            write_json(
+                dictionary = status,  
+                path = filename
+            )
+
         return status 
 
     @app.post('/fetch')
