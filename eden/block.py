@@ -4,11 +4,13 @@ from pydantic import create_model
 from .datatypes import Image
 
 class BaseBlock(object):
-    def __init__(self):
+    def __init__(self, max_gpu_load = 0.5, max_gpu_mem = 0.5):
         self.__run__ = None
         self.__setup__ = None
         self.default_args = None
         self.data_model = None
+        self.max_gpu_load = max_gpu_load
+        self.max_gpu_mem = max_gpu_mem
 
     def create_default_data_fields(self):
 

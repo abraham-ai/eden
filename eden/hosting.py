@@ -10,6 +10,8 @@ from .utils import parse_for_taking_request, write_json, make_filename_and_id, g
 from .datatypes import Image
 from .models import Credentials
 
+import GPUtil
+
 def host_block(block,  port = 8080, results_dir = 'results'):
 
     if not os.path.isdir(results_dir):
@@ -34,6 +36,14 @@ def host_block(block,  port = 8080, results_dir = 'results'):
     def run(args, filename):
         args = dict(args)
         args = parse_for_taking_request(args)
+
+        '''
+        allocating a GPU ID to the tast based on usage
+        for now let's settle for max 1 GPU per task :(
+        '''
+        gpu_id = GPUtil.getAvailable(order = 'first', limit = 1, maxLoad = block.max_gpu_load, maxMemory = block.max_gpu_mem, includeNan=False, excludeID=[], excludeUUID=[])[0]
+        args['__gpu__'] = 'cuda:' + str(gpu_id)
+        
         try:
             output = block.__run__(args)
             for key, value in output.items():
