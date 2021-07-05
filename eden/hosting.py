@@ -20,7 +20,7 @@ $ celery --app={module}.{method} worker
 from celery import Celery
 
 
-def run_celery_app(app, loglevel = 'DEBUG'):
+def run_celery_app(app, loglevel = 'INFO', num_workers = 1):
     """runs a Celery() instance
 
     Args:
@@ -30,21 +30,24 @@ def run_celery_app(app, loglevel = 'DEBUG'):
     argv = [
         'worker',
         f'--loglevel={loglevel}',
+        f'--concurrency={num_workers}'
     ]
     app.worker_main(argv)
 
 
 def host_block(block,  port = 8080, results_dir = 'results'):
 
-
     '''
     using celery from example: 
     https://testdriven.io/blog/fastapi-and-celery/
+
+    watch this celery worker live with:
+    $ celery --broker="redis://localhost:6379"  flower --port=6060
     '''
     celery_app = Celery(__name__)
+
     celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
-
 
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
@@ -67,6 +70,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
 
     @celery_app.task(name = 'run')
     def run(args, filename, gpu_id):
+        
         args = dict(args)
         args = parse_for_taking_request(args)
         
@@ -88,6 +92,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
 
     @app.post('/run')
     def start_run(args: block.data_model, background_tasks: BackgroundTasks):
+
         filename, token = make_filename_and_id(results_dir = results_dir, username = args.username)
 
         '''
@@ -152,13 +157,44 @@ def host_block(block,  port = 8080, results_dir = 'results'):
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s"
 
 
-    kwargs = {
-        'app': celery_app,
-        'loglevel': 'INFO'
-    }
-    celery_thread = threading.Thread(target=run_celery_app, kwargs=kwargs)
+    '''
+    hacks below
+    '''
 
-    celery_thread.start()
+    import contextlib
+    import time
+    import threading
+    import uvicorn
+    
+    
+    class Server(uvicorn.Server):
+        '''
+        Refer issue: 
+            https://github.com/encode/uvicorn/issues/742#issuecomment-674411676
+        '''
+        def install_signal_handlers(self):
+            pass
 
-    uvicorn.run(app, port = port)
-    celery_thread.join()
+        @contextlib.contextmanager
+        def run_in_thread(self):
+            thread = threading.Thread(target=self.run)
+            thread.start()
+            try:
+                while not self.started:
+                    time.sleep(1e-3)
+                yield
+            finally:
+                self.should_exit = True
+                thread.join()
+
+    config = uvicorn.config.Config(app = app, port=port)
+    server = Server(config = config)
+
+    with server.run_in_thread():
+        message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + "redis://localhost:6379"
+        print(message)
+        run_celery_app(celery_app)
+
+    message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Stopped"
+    print(message)
+
