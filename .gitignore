@@ -2,3 +2,4 @@ test_images/
 env-eden/
 __pycache__/
 results/
+results_client/
