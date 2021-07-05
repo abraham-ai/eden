@@ -13,33 +13,13 @@ from .datatypes import Image
 from .models import Credentials
 from .threaded_server import ThreadedServer
 
-
 '''
-for module.py, CLI usage was:
-$ celery --app={module}.{method} worker
+Celery+redis is needed to be able to queue tasks
 '''
 from celery import Celery
+from .celery_utils import run_celery_app
 
-
-def run_celery_app(app, loglevel = 'INFO', num_workers = 10):
-    """runs a Celery() instance
-
-    Args:
-        app (celery.Celery): celery "app" to be run
-        loglevel (str, optional): "INFO" or "DEBUG". Defaults to 'DEBUG'.
-    """
-    argv = [
-        'worker',
-        f'--loglevel={loglevel}',
-        f'--concurrency={num_workers}',
-        '-E'
-    ]
-
-    print('Running with args: ', argv)
-    app.worker_main(argv)
-
-
-def host_block(block,  port = 8080, results_dir = 'results'):
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4):
 
     '''
     using celery from example: 
@@ -169,7 +149,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
         message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + "redis://localhost:6379"
         print(message)
         ## starts celery app
-        run_celery_app(celery_app)
+        run_celery_app(celery_app, max_num_workers=max_num_workers)
 
     message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Stopped"
     print(message)
