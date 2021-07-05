@@ -1,6 +1,8 @@
 import os
 import json
 import uvicorn
+import GPUtil
+import threading
 import traceback
 from fastapi import FastAPI, BackgroundTasks
 
@@ -10,9 +12,39 @@ from .utils import parse_for_taking_request, write_json, make_filename_and_id, g
 from .datatypes import Image
 from .models import Credentials
 
-import GPUtil
+
+'''
+for module.py, CLI usage was:
+$ celery --app={module}.{method} worker
+'''
+from celery import Celery
+
+
+def run_celery_app(app, loglevel = 'DEBUG'):
+    """runs a Celery() instance
+
+    Args:
+        app (celery.Celery): celery "app" to be run
+        loglevel (str, optional): "INFO" or "DEBUG". Defaults to 'DEBUG'.
+    """
+    argv = [
+        'worker',
+        f'--loglevel={loglevel}',
+    ]
+    app.worker_main(argv)
+
 
 def host_block(block,  port = 8080, results_dir = 'results'):
+
+
+    '''
+    using celery from example: 
+    https://testdriven.io/blog/fastapi-and-celery/
+    '''
+    celery_app = Celery(__name__)
+    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
+    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
+
 
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
@@ -33,6 +65,7 @@ def host_block(block,  port = 8080, results_dir = 'results'):
             }
 
 
+    @celery_app.task(name = 'run')
     def run(args, filename, gpu_id):
         args = dict(args)
         args = parse_for_taking_request(args)
@@ -117,4 +150,15 @@ def host_block(block,  port = 8080, results_dir = 'results'):
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s"
+
+
+    kwargs = {
+        'app': celery_app,
+        'loglevel': 'INFO'
+    }
+    celery_thread = threading.Thread(target=run_celery_app, kwargs=kwargs)
+
+    celery_thread.start()
+
     uvicorn.run(app, port = port)
+    celery_thread.join()
