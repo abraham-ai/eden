@@ -40,13 +40,13 @@ class QueueData(object):
 
     def update_file(self):
         """
-        writes all configs into self.filename
+        writes all tokens into `self.filename`
         """
         write_json(dict(self.tokens), path = self.filename)
     
 
     def join_queue(self, token, config):
-        """append into queue
+        """appends token into queue
 
         Args:
             token (str): token
@@ -61,19 +61,11 @@ class QueueData(object):
         print(self.tokens['queued'], 'in queue join')
 
     def set_as_running(self, token):
-        """move from queued to running
+        """move token from queued to running
 
         Args:
             token (str): token
         """
-
-        # try:
-        #     del self.all[token]
-        # except KeyError:
-        #     import warnings
-        #     # raise KeyError(f'Key: {token} not found in keys {self.all.keys()}')
-        #     # raise warnings.warn(f'Key: {token} not found in keys {self.all.keys()}')
-        #     pass
 
         self.tokens = load_json_as_dict(self.filename)
 
@@ -84,14 +76,11 @@ class QueueData(object):
 
 
     def set_as_complete(self, token):
-        """move from running to complete
+        """move token from running to complete
 
         Args:
             token (str): token
         """
-
-        # ## delete from queue
-        # del self.all[token]
 
         self.tokens = load_json_as_dict(self.filename)
 
@@ -147,11 +136,6 @@ class QueueData(object):
             'running': [],
             'complete': []
         }
-        # try: 
-        #     write_json(self.tokens, path = self.filename)
-        # except Exception as e:
-        #     raise Exception('Failed to clean queue on:' + self.filename + '\n' + str(e))
-
 
     def check_if_queued(self, token):
         self.tokens = load_json_as_dict(self.filename)
