@@ -8,10 +8,11 @@ from fastapi import FastAPI
 
 from .log_utils import Colors
 from uvicorn.config import LOGGING_CONFIG
-from .utils import parse_for_taking_request, write_json, make_filename_and_id, get_filename_from_id, load_json
+from .utils import parse_for_taking_request, write_json, make_filename_and_token, get_filename_from_token, load_json_as_dict
 from .datatypes import Image
 from .models import Credentials
 from .threaded_server import ThreadedServer
+from .queue import QueueData
 
 '''
 Celery+redis is needed to be able to queue tasks
@@ -33,6 +34,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
 
+    queue_data = QueueData()
+
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
         os.mkdir(results_dir)
@@ -53,12 +56,14 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
 
     @celery_app.task(name = 'run')
-    def run(args, filename, gpu_id):
+    def run(args, filename, gpu_id, token):
         
         args = dict(args)
         args = parse_for_taking_request(args)
         
         args['__gpu__'] = 'cuda:' + str(gpu_id)
+
+        queue_data.set_as_running(token = token)
         
         try:
             output = block.__run__(args)
@@ -74,11 +79,10 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 "ERROR" : str(e) + ". Check Host's logs for full traceback"
             }
 
+        queue_data.set_as_complete(token = token)
+
     @app.post('/run')
     def start_run(args: block.data_model):
-
-        filename, token = make_filename_and_id(results_dir = results_dir, username = args.username)
-
         '''
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
@@ -92,54 +96,48 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         if len(available_gpu_ids) == 0:
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
-                'token': token
             }
 
             return status
+
         else:
+
+            filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
+
             gpu_id = available_gpu_ids[0]
-            run.delay(args = dict(args), filename = filename, gpu_id = gpu_id)
 
-            status = {
-                'status': 'started',
-                'token': token
-            }
+            queue_data.join_queue(token = token, config = dict(args))
 
-            write_json(
-                dictionary = status,  
-                path = filename
-            )
+            run.delay(args = dict(args), filename = filename, gpu_id = gpu_id, token = token)
 
-        return status 
+            status = queue_data.get_status(token = token)
+            status['token']  = token
+
+            return status 
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):
 
         token = credentials.token
-        file_path = get_filename_from_id(results_dir = results_dir, id = token)
 
-        if os.path.exists(file_path):
-            results = load_json(file_path)
+        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
 
-            if results != {'status': 'started','token': token}:
-                return {
-                    'status': 'completed',
-                    'output': results 
-                }
-            else:
-                return {
-                    'status': 'running',
-                }
+            return queue_data.get_status(token = token)
 
-        else:
-            return {
-                'ERROR': 'invalid token: ' + token
+        elif queue_data.check_if_complete(token = token):
+            file_path = get_filename_from_token(results_dir = results_dir, id = token)
+            results = load_json_as_dict(file_path)
+
+            status = {
+                'status': 'complete',
+                'output': results
             }
+
+            return status
 
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s"
-
 
     config = uvicorn.config.Config(app = app, port=port)
     server = ThreadedServer(config = config)
