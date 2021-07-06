@@ -26,6 +26,10 @@ def some_setup():
     pass  ## your setup goes here
 ```
 
+> Initiating a `BaseBlock` has 2 optional args. Both args are useful to accept/deny requests based on GPU usage. 
+> * `max_gpu_load`: specifies the maximum amount of GPU load, over which `eden` would deny requests.
+> * `max_gpu_mem`: specifies the maximum amount of GPU memory that should be allocated, over which `eden` would deny requests.
+
 `run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports any number of text and image inputs.
 
 ```python 
@@ -39,6 +43,8 @@ def do_something(config):
 
     # print('doing something for: ', config['username'])
     pil_image = config['input_image']
+    device = config['__gpu__']  ## device is something like "cuda:0"
+
     # do something with your image/text inputs here 
 
     return {
@@ -54,9 +60,12 @@ from eden.hosting import host_block
 
 host_block(
     block = eden_block, 
-    port= 5656
+    port= 5656,
+    max_num_workers= 4 
 )
 ```
+
+> `max_num_workers` specifies the maximum number of tasks that should be run in parallel at a time.
 
 ## Client
 
@@ -85,7 +94,11 @@ config = {
 run_response = c.run(config)
 ```
 
-Fetching results/checking task status using the token can be done using `fetch()`. If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. If it's not complete, it returns `{'status': 'running'}`
+Fetching results/checking task status using the token can be done using `fetch()`. 
+
+* If it's queued, it returns something like `{'status': 'queued', 'waiting_behind': 9}`
+
+* If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. 
 
 ```python
 results = c.fetch(token = run_response['token'])
