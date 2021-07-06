@@ -32,5 +32,6 @@ from eden.hosting import host_block
 
 host_block(
     block = eden_block, 
-    port= 5656
+    port= 5656,
+    max_num_workers= 4  ## equivalent to --concurrency in celery
 )
