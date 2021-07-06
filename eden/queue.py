@@ -3,25 +3,25 @@ from .utils import write_json, load_json_as_dict
 class QueueData(object):
     def __init__(self, filename = '__eden_queue__.json'):
 
-        '''
-        Example json shown below: 
+        """Example file: 
 
         {
-            'token1': {
-                'config': {
-                    'param1': something,
-                    'param2': something else
-                }
-            }
+            "queued": [
+                "red_1625591919_s3wxnk1l",
+                "blue_1625591919_7ggcllpp",
+            ],
+            "running": [
+                "abraham_1625591919_vecktm1l",
+                "pink_1625591919_5tcuhxf9"
 
-            'token2': {
-                'config': {
-                    'param1': another thingy,
-                    'param2': more stuff
-                }
-            }
+            ],
+            "complete": [
+                "green_1625591919_430tqllh",
+                "orange_1625591919_vd8x0kjx",
+            ]
         }
-        '''
+
+        """
 
         self.filename = filename
        
