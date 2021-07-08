@@ -142,7 +142,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     config = uvicorn.config.Config(app = app, port=port)
     server = ThreadedServer(config = config)
 
-    ## context starts fastAPI stuff
+    # context starts fastAPI stuff and run_celery_app starts celery
     with server.run_in_thread():
         message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + "redis://localhost:6379"
         print(message)
