@@ -1,4 +1,5 @@
 import requests
+import json
 from .utils import parse_for_sending_request, parse_response_after_run
 
 class Client(object):
@@ -11,8 +12,12 @@ class Client(object):
         config['username'] = self.username
         config = parse_for_sending_request(config= config)
         resp = requests.post(self.url + '/run', json=config, timeout = self.timeout)
-        resp = resp.json()
 
+        try:
+            resp = resp.json()
+        except json.decoder.JSONDecodeError:
+            raise Exception('got invalid response from host: \n', str(resp))
+            
         try:
             resp = parse_response_after_run(resp)
             return resp
@@ -28,7 +33,12 @@ class Client(object):
             'token': token
         }
         resp = requests.post(self.url + '/fetch', timeout = self.timeout, json = config)
-        resp = resp.json()
+
+        try:
+            resp = resp.json()
+        except json.decoder.JSONDecodeError:
+            raise Exception('got invalid response from host: \n', str(resp))
+            
         resp = parse_response_after_run(resp)
         return resp
 
