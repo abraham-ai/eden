@@ -4,7 +4,16 @@ from pydantic import create_model
 from .datatypes import Image
 
 class BaseBlock(object):
+    """
+    Meant to serve as the unit which encapsulates your functions and 
+    help host them on a server with multiple GPUs.
+
+    Args:
+        max_gpu_load (float, optional): Estimated maximum GPU load that would be required by the job. 0.75 means that it would take up 75% of the load. Defaults to 0.5.
+        max_gpu_mem (float, optional): Estimated maximum GPU memory that would be required by the job. 0.75 means that it would take up 75% of the GPU memory. Defaults to 0.5.
+    """
     def __init__(self, max_gpu_load = 0.5, max_gpu_mem = 0.5):
+        
         self.__run__ = None
         self.__setup__ = None
         self.default_args = None
@@ -13,12 +22,25 @@ class BaseBlock(object):
         self.max_gpu_mem = max_gpu_mem
 
     def create_default_data_fields(self):
+        """
+        Creates "skeleton data" for eden's special dataypes found in eden.dataypes. 
+
+        It includes: 
+        * eden.datatypes.Image: wraps PIL images, numpy arrays and image files (str)
+
+        """
 
         for key, value in self.default_args.items():
             if isinstance(value, Image):
                 self.default_args[key] = value.__call__()
     
     def build_pydantic_model(self):
+        """
+        Builds a pydantic model based which tells fastAPI what to expect from a user's requests. 
+
+        Raises:
+            Exception when self.default_args are not defined.
+        """
          
         if self.default_args is not None:
             self.create_default_data_fields()
@@ -37,6 +59,33 @@ class BaseBlock(object):
         return decorator
 
     def run(self, args: dict = None):
+        """
+        Run decorator which defines the function to run on each request from a client. 
+
+        Args:
+            args (dict): Specifies the arguments which are to be used in the decorated function. When using special dataypes like images, make sure you use eden.datatypes.Image. 
+
+        Example: 
+
+        ```python 
+
+        my_args = {
+            'prompt': 'hello world', ## text input
+            'input_image': Image(),  ## for image input
+        }
+
+        @eden_block.run(args = my_args)
+        def do_something(config): 
+
+            pil_image = config['input_image']
+            # do something with your image/text inputs here 
+
+            return {
+                'prompt': config['prompt'],  ## returning text
+                'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
+            }
+        ```
+        """
         
         self.default_args = args
         self.build_pydantic_model()

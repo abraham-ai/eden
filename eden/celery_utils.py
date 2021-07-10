@@ -1,8 +1,11 @@
 def run_celery_app(app, loglevel = 'INFO', max_num_workers = 4, pool = 'threads'):
-    """runs a Celery() instance
+    """
+    Runs a Celery() instance.
 
-    to learn more about the args, check:
-    https://www.distributedpython.com/2018/10/26/celery-execution-pool/
+    Note: `pool = 'threading'` is the only option which did not thrown any CUDA related errors on pytorch. 
+
+    To learn more about the args, check:
+        https://www.distributedpython.com/2018/10/26/celery-execution-pool/
 
     Args:
         app (celery.Celery): celery "app" to be run
