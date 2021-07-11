@@ -99,3 +99,35 @@ Fetching results/checking task status using the token can be done using `fetch()
 results = c.fetch(token = run_response['token'])
 print(results)  
 ```
+## Building directly from github repos
+
+To share your pipelines with the world, all that you have to do is to add an `eden.yml` file to the root directory of your github repository. 
+
+The `eden.yml` file specifies how to build and host the block in 2 different sections (`build` and `run`). 
+
+Here's how an `eden.yml` file should look like: 
+
+```
+config:
+    name: Name of your project
+    author: Name of the author
+    
+build:
+    - pip install -r requirements.txt 
+
+run:
+    - python3 eden_server.py
+```
+
+And to build and host the same exact block on another machine, run the following snippet: 
+> It is highly recommended that you run it in a virtual environment. 
+
+```python
+from eden.github import GithubSource
+
+g = GithubSource(url = "https://github.com/username/some_repo.git") ## paste your url here
+
+if __name__ == '__main__':
+    g.build_and_run()
+```
+
