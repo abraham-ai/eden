@@ -2,6 +2,8 @@ import git
 import os 
 import yaml
 
+from .log_utils import Colors
+
 class GithubSource(object):
     def __init__(self, url, folder_path = "."):
         self.url = url
@@ -45,7 +47,8 @@ class GithubSource(object):
             print('starting build...')
             for i in range(len(self.config['build'])):
                 command = self.config['build'][i]
-                print("Running [{}/{}]: ".format(str(i), str(len(self.config['build']))), command )
+                message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + Colors.GREEN + "Running [{}/{}]: ".format(str(i), str(len(self.config['build']))) + Colors.END
+                print(message, command )
                 os.system(command)
 
     def run(self):
@@ -56,7 +59,8 @@ class GithubSource(object):
             print('starting run...')
             for i in range(len(self.config['run'])):
                 command = self.config['run'][i]
-                print("Running [{}/{}]: ".format(str(i), str(len(self.config['run']))), command )
+                message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + Colors.GREEN + "Running [{}/{}]: ".format(str(i), str(len(self.config['run']))) +  Colors.END
+                print(message, command )
                 os.system(command)
 
     def build_and_run(self):
