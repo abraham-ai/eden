@@ -9,28 +9,24 @@
 Eden is a sandbox for [the Abraham project](http://abraham.ai) to test pipelines for creating generative art with machine learning.
 
 
-## Hosting
+## Setting up a block
 
 Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `BaseBlock`, they're the units which take certain inputs and generate art accordingly. 
 
-The first step is to configure `setup()` and `run()`. 
+The first step is to configure `run()`. 
 
 ```python 
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
 eden_block = BaseBlock()
-
-@eden_block.setup
-def some_setup():
-    pass  ## your setup goes here
 ```
 
 > Initiating a `BaseBlock` has 2 optional args. Both args are useful to accept/deny requests based on GPU usage. 
 > * `max_gpu_load`: specifies the maximum amount of GPU load, over which `eden` would deny requests.
 > * `max_gpu_mem`: specifies the maximum amount of GPU memory that should be allocated, over which `eden` would deny requests.
 
-`run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports any number of text and image inputs.
+`run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports any number of text and images, and numbers as inputs.
 
 ```python 
 my_args = {
@@ -53,7 +49,7 @@ def do_something(config):
     }
 ```
 
-Running on localhost
+## Hosting a block
 
 ```python
 from eden.hosting import host_block
@@ -69,18 +65,16 @@ host_block(
 
 ## Client
 
-A `Client` is the entity that sends requests to a block to generate art. It requires just the `url` to where the client is hosted. If you're using images as input, use `encode()` to encode it before sending a request. 
+A `Client` is the entity that sends requests to a block to generate art. It requires just the `url` to where the client is hosted.
 
 ```python
 from eden.client import Client
 from eden.datatypes import Image
 
 c = Client(url = 'http://127.0.0.1:5656', username= 'abraham')
-
-setup_response = c.setup()
 ```
 
-After you start a task as shown below, it returns a token as `run_response['token']`. This token should be used later on to check the task status or to obtain results.
+After you start a task with `run()` as shown below, it returns a token as `run_response['token']`. This token should be used later on to check the task status or to obtain your results.
 
 > **Note**: `Image()` is compatible with following types: `PIL.Image`, `numpy.array` and filenames (`str`) ending with `.jpg` or `.png`
 
@@ -96,7 +90,7 @@ run_response = c.run(config)
 
 Fetching results/checking task status using the token can be done using `fetch()`. 
 
-* If it's queued, it returns something like `{'status': 'queued', 'waiting_behind': 9}`
+* If the task is queued, it returns something like `{'status': 'queued', 'waiting_behind': 9}`
 
 * If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. 
 
