@@ -107,7 +107,7 @@ The `eden.yml` file specifies how to build and host the block in 2 different sec
 
 Here's how an `eden.yml` file should look like: 
 
-```
+```yaml
 config:
     name: Name of your project
     author: Name of the author
