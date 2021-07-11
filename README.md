@@ -26,7 +26,7 @@ eden_block = BaseBlock()
 > * `max_gpu_load`: specifies the maximum amount of GPU load, over which `eden` would deny requests.
 > * `max_gpu_mem`: specifies the maximum amount of GPU memory that should be allocated, over which `eden` would deny requests.
 
-`run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports any number of text and images, and numbers as inputs.
+`run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports text, images, and numbers as inputs.
 
 ```python 
 my_args = {
@@ -38,13 +38,14 @@ my_args = {
 def do_something(config): 
 
     # print('doing something for: ', config['username'])
+    prompt = config['prompt']
     pil_image = config['input_image']
     device = config['__gpu__']  ## device is something like "cuda:0"
 
     # do something with your image/text inputs here 
 
     return {
-        'prompt': config['prompt'],  ## returning text
+        'some_text': 'hello world',  ## returning text (str)
         'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
 ```
