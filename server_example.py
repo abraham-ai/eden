@@ -3,10 +3,6 @@ from eden.datatypes import Image
 
 eden_block = BaseBlock(max_gpu_load= 0.5, max_gpu_mem= 0.5)
 
-@eden_block.setup
-def some_setup():
-    pass  ## your setup goes here
-
 my_args = {
         'prompt': 'let there be light', ## text
         'number': 12345,                ## numbers 

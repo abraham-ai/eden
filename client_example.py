@@ -3,8 +3,6 @@ from eden.datatypes import Image
 
 c = Client(url = 'http://127.0.0.1:5656', username= 'abraham')
 
-setup_response = c.setup()
-
 config = {
     'prompt': 'let there be light',
     'number': 2233,
