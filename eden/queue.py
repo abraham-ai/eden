@@ -58,8 +58,6 @@ class QueueData(object):
         self.update_file()
         self.__all_tokens__.append(token)
 
-        print(self.tokens['queued'], 'in queue join')
-
     def set_as_running(self, token):
         """move token from queued to running
 

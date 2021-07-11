@@ -51,9 +51,6 @@ class Client(object):
         except KeyError:
             return resp
 
-    def setup(self):
-        resp = requests.get(self.url + '/setup', timeout = self.timeout)
-        return resp.json()
 
     def fetch(self, token):
         """

@@ -48,16 +48,6 @@ class BaseBlock(object):
         else:
             raise Exception('default_args are not defined for block.run')
 
-    def setup(self,decorated_fn):
-
-        self.__setup__ = decorated_fn
-
-        def decorator(*args, **kwargs):
-            returned_value = decorated_fn(**args, **kwargs)
-            return returned_value
-
-        return decorator
-
     def run(self, args: dict = None):
         """
         Run decorator which defines the function to run on each request from a client. 

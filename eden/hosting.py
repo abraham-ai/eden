@@ -42,19 +42,6 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
     app =  FastAPI()
 
-    @app.get('/setup')
-    def setup():
-        try:
-            block.__setup__()
-            return {
-                'status': 'complete'
-            }
-        except Exception as e: 
-            return {
-                'ERROR': str(e) 
-            }
-
-
     @celery_app.task(name = 'run')
     def run(args, filename, gpu_id, token):
         
