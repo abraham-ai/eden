@@ -50,6 +50,9 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         
         args['__gpu__'] = 'cuda:' + str(gpu_id)
 
+        if block.progress == True:
+            args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
+
         queue_data.set_as_running(token = token)
         
         try:
@@ -93,11 +96,13 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
             gpu_id = available_gpu_ids[0]
 
-            queue_data.join_queue(token = token, config = dict(args))
+            args = dict(args)
 
-            run.delay(args = dict(args), filename = filename, gpu_id = gpu_id, token = token)
+            queue_data.join_queue(token = token, config = args)
 
-            status = queue_data.get_status(token = token)
+            run.delay(args = args, filename = filename, gpu_id = gpu_id, token = token)
+
+            status = queue_data.get_status(token = token, results_dir = results_dir)
             status['token']  = token
 
             return status 
@@ -109,7 +114,9 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
         if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
 
-            return queue_data.get_status(token = token)
+            status = queue_data.get_status(token = token, results_dir = results_dir)
+
+            return status
 
         elif queue_data.check_if_complete(token = token):
             file_path = get_filename_from_token(results_dir = results_dir, id = token)

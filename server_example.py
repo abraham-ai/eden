@@ -1,7 +1,7 @@
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
-eden_block = BaseBlock(max_gpu_load= 0.5, max_gpu_mem= 0.5)
+eden_block = BaseBlock()
 
 my_args = {
         'prompt': 'let there be light', ## text
@@ -9,14 +9,17 @@ my_args = {
         'input_image': Image()          ## image requires Image()
     }
 
-@eden_block.run(args = my_args)
+@eden_block.run(args = my_args, progress = True)
 def do_something(config): 
 
     pil_image = config['input_image']
     some_number = config['number']
-    gpu_id = config['__gpu__']
+    device = config['__gpu__']
 
-    # do something here
+    # do something with your inputs here 
+
+    for i in range(10):
+        config['__progress__'].update(1/10)
 
     return {
         'prompt': config['prompt'],  ## returning text
@@ -28,6 +31,5 @@ from eden.hosting import host_block
 
 host_block(
     block = eden_block, 
-    port= 5656,
-    max_num_workers= 4  ## equivalent to --concurrency in celery
+    port= 5656
 )

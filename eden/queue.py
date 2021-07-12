@@ -1,4 +1,4 @@
-from .utils import write_json, load_json_as_dict
+from .utils import write_json, load_json_as_dict, get_filename_from_token
 
 class QueueData(object):
     def __init__(self, filename = '__eden_queue__.json'):
@@ -97,7 +97,7 @@ class QueueData(object):
 
         return status
 
-    def get_status(self, token):
+    def get_status(self, token, results_dir):
 
         ## if the task has already started
         if token in self.tokens['queued'] and not(token in self.tokens['running'] and token in self.tokens['complete'] ):
@@ -112,6 +112,8 @@ class QueueData(object):
 
             status = {
                 'status': 'running',
+                'progress': load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress']
+
             }
             return status
 
@@ -146,4 +148,3 @@ class QueueData(object):
     def check_if_complete(self, token):
         self.tokens = load_json_as_dict(self.filename)
         return True if token in self.tokens['complete'] else False
-
