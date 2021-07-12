@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import create_model
 from .datatypes import Image
+from .progress_tracker import ProgressTracker
 
 class BaseBlock(object):
     """
@@ -20,6 +21,10 @@ class BaseBlock(object):
         self.data_model = None
         self.max_gpu_load = max_gpu_load
         self.max_gpu_mem = max_gpu_mem
+
+    def get_progress_bar(self, results_dir, token = None, show_bar = False):
+        p = ProgressTracker(token = token, show_bar= show_bar, results_dir = results_dir)
+        return p
 
     def create_default_data_fields(self):
         """
@@ -48,7 +53,7 @@ class BaseBlock(object):
         else:
             raise Exception('default_args are not defined for block.run')
 
-    def run(self, args: dict = None):
+    def run(self, args: dict = None, progress = False):
         """
         Run decorator which defines the function to run on each request from a client. 
 
@@ -78,6 +83,8 @@ class BaseBlock(object):
         """
         
         self.default_args = args
+        if progress == True: 
+            self.progress = True
         self.build_pydantic_model()
 
         def decorator(fn):
