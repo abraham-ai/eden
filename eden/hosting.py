@@ -23,9 +23,6 @@ from .celery_utils import run_celery_app
 def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4):
 
     '''
-    using celery from example: 
-    https://testdriven.io/blog/fastapi-and-celery/
-
     watch this celery worker live with:
     $ celery --broker="redis://localhost:6379" flower --port=6060 
     '''
@@ -43,36 +40,11 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     app =  FastAPI()
 
     @celery_app.task(name = 'run')
-    def run(args, filename, gpu_id, token):
+    def run(args, filename, token):
         
         args = dict(args)
         args = parse_for_taking_request(args)
-        
-        args['__gpu__'] = 'cuda:' + str(gpu_id)
 
-        if block.progress == True:
-            args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
-
-        queue_data.set_as_running(token = token)
-        
-        try:
-            output = block.__run__(args)
-            for key, value in output.items():
-                if isinstance(value, Image):
-                    output[key] = value.__call__()
-
-            write_json(dictionary = output,  path = filename)
-
-        except Exception as e:
-            traceback.print_exc()
-            return {
-                "ERROR" : str(e) + ". Check Host's logs for full traceback"
-            }
-
-        queue_data.set_as_complete(token = token)
-
-    @app.post('/run')
-    def start_run(args: block.data_model):
         '''
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
@@ -88,24 +60,44 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 'status': 'No GPUs are available at the moment, please try again later',
             }
 
-            return status
-
         else:
 
-            filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
+            args['__gpu__'] = 'cuda:' + str(available_gpu_ids[0])
 
-            gpu_id = available_gpu_ids[0]
+            if block.progress == True:
+                args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
 
-            args = dict(args)
+            queue_data.set_as_running(token = token)
+            
+            try:
+                output = block.__run__(args)
+                for key, value in output.items():
+                    if isinstance(value, Image):
+                        output[key] = value.__call__()
 
-            queue_data.join_queue(token = token, config = args)
+                write_json(dictionary = output,  path = filename)
 
-            run.delay(args = args, filename = filename, gpu_id = gpu_id, token = token)
+            except Exception as e:
+                traceback.print_exc()
+                return {
+                    "ERROR" : str(e) + ". Check Host's logs for full traceback"
+                }
 
-            status = queue_data.get_status(token = token, results_dir = results_dir)
-            status['token']  = token
+            queue_data.set_as_complete(token = token)
 
-            return status 
+    @app.post('/run')
+    def start_run(args: block.data_model):
+        
+        filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
+
+        args = dict(args)
+        queue_data.join_queue(token = token, config = args)
+
+        run.delay(args = args, filename = filename, token = token)
+        status = queue_data.get_status(token = token, results_dir = results_dir)
+        status['token']  = token
+
+        return status 
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):
