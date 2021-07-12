@@ -2,6 +2,8 @@ import git
 import os 
 import yaml
 
+from .log_utils import Colors
+
 class GithubSource(object):
     def __init__(self, url, folder_path = "."):
         self.url = url
@@ -33,7 +35,6 @@ class GithubSource(object):
         try:
             with open("eden.yml", 'r') as stream:
                 self.config = yaml.safe_load(stream)
-                print(self.config)
         except FileNotFoundError:
             raise FileNotFoundError('The repo does not contain an "eden.yml" file :(')
 
@@ -45,7 +46,8 @@ class GithubSource(object):
             print('starting build...')
             for i in range(len(self.config['build'])):
                 command = self.config['build'][i]
-                print("Running [{}/{}]: ".format(str(i), str(len(self.config['build']))), command )
+                message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + Colors.GREEN + "Running [{}/{}]: ".format(str(i+1), str(len(self.config['build']))) + Colors.END
+                print(message, command )
                 os.system(command)
 
     def run(self):
@@ -53,10 +55,10 @@ class GithubSource(object):
         Runs the commands listed under the run section in the eden.yml file.
         """
         if self.config is not None:
-            print('starting run...')
             for i in range(len(self.config['run'])):
                 command = self.config['run'][i]
-                print("Running [{}/{}]: ".format(str(i), str(len(self.config['run']))), command )
+                message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + Colors.GREEN + "Running [{}/{}]: ".format(str(i+1), str(len(self.config['run']))) +  Colors.END
+                print(message, command )
                 os.system(command)
 
     def build_and_run(self):
