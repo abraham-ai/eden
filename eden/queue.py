@@ -112,9 +112,10 @@ class QueueData(object):
 
             status = {
                 'status': 'running',
-                'progress': load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress']
+                'progress': round(load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress'], 3)
 
             }
+            
             return status
 
         elif token in self.tokens['complete'] and not(token in self.tokens['running'] and token in self.tokens['queued']): 
