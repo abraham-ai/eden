@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from .utils import parse_for_sending_request, parse_response_after_run
 
 class Client(object):
@@ -77,5 +78,20 @@ class Client(object):
             raise Exception('got invalid response from host: \n', str(resp))
             
         resp = parse_response_after_run(resp)
+        return resp
+
+    def await_results(self, token, fetch_interval = 1, show_progress = True):
+
+        while True:
+            resp = self.fetch(token = token)
+
+            if resp['status'] == 'complete':
+                break
+            else:
+                if show_progress == True:
+                    print(str(resp), end = '\r')
+
+            time.sleep(fetch_interval)
+
         return resp
 
