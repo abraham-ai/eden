@@ -1,3 +1,6 @@
+import os 
+from .log_utils import Colors
+import warnings
 from .utils import write_json, load_json_as_dict, get_filename_from_token
 
 class QueueData(object):
@@ -33,10 +36,15 @@ class QueueData(object):
 
         self.__all_tokens__ = []  ## write only
 
-        try: 
-            write_json(self.tokens, path = filename)
-        except Exception as e:
-            raise Exception('Failed to initiate queue on:' + self.filename + '\n' + str(e))
+        if os.path.exists(self.filename) == False:
+            try: 
+                write_json(self.tokens, path = filename)
+            except Exception as e:
+                raise Exception('Failed to initiate queue on:' + self.filename + '\n' + str(e))
+
+        else:
+            print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + f'QueueData: File {self.filename} already exists, not making a new file.')
+
 
     def update_file(self):
         """
@@ -110,9 +118,18 @@ class QueueData(object):
 
         elif token in self.tokens['running'] and not(token in self.tokens['queued'] and token in self.tokens['complete']):
 
+            try:
+                progress = round(load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress'], 3)
+            except:                
+                warn_message = f"""QueueData.get_status: {get_filename_from_token(results_dir = results_dir, id = token)} is not found, this is probably because you set progress = True on @eden.BaseBlock.run() but did not update progress. 
+                If you do not understand whats going on, just set progress = False on @eden.BaseBlock.run()
+                """
+                warnings.warn(warn_message)
+                progress = None
+
             status = {
                 'status': 'running',
-                'progress': round(load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress'], 3)
+                'progress': progress
 
             }
             
@@ -148,4 +165,4 @@ class QueueData(object):
 
     def check_if_complete(self, token):
         self.tokens = load_json_as_dict(self.filename)
-        return True if token in self.tokens['complete'] else False
+        return True if (token in self.tokens['complete']) else False
