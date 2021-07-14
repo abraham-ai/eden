@@ -21,6 +21,7 @@ class BaseBlock(object):
         self.data_model = None
         self.max_gpu_load = max_gpu_load
         self.max_gpu_mem = max_gpu_mem
+        self.progress = False
 
     def get_progress_bar(self, results_dir, token = None, show_bar = False):
         p = ProgressTracker(token = token, show_bar= show_bar, results_dir = results_dir)
