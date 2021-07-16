@@ -140,7 +140,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
     # context starts fastAPI stuff and run_celery_app starts celery
     with server.run_in_thread():
-        message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + "redis://localhost:6379"
+        message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
         run_celery_app(celery_app, max_num_workers=max_num_workers)
