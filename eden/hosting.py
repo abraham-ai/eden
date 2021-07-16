@@ -21,6 +21,16 @@ from celery import Celery
 from .celery_utils import run_celery_app
 
 def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379):
+    """
+    Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
+
+    Args:
+        block (eden.block.BaseBlock): The eden block you'd want to host. 
+        port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
+        results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
+        max_num_workers (int, optional): MAximum number of tasks to run in parallel. Defaults to 4.
+        redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
+    """
 
     '''
     watch this celery worker live with:
