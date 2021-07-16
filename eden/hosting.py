@@ -86,14 +86,16 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                         output[key] = value.__call__()
 
                 write_json(dictionary = output,  path = filename)
-
+                queue_data.set_as_complete(token = token)
+                
             except Exception as e:
-                traceback.print_exc()
-                return {
-                    "ERROR" : str(e) + ". Check Host's logs for full traceback"
+                output = {
+                    "error" : str(e)
                 }
+                write_json(dictionary = output,  path = filename)
+                queue_data.set_as_failed(token = token)
+                traceback.print_exc()
 
-            queue_data.set_as_complete(token = token)
 
     @app.post('/run')
     def start_run(args: block.data_model):
@@ -126,6 +128,17 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
             status = {
                 'status': 'complete',
+                'output': results
+            }
+
+            return status
+
+        elif queue_data.check_if_failed(token = token):
+            file_path = get_filename_from_token(results_dir = results_dir, id = token)
+            results = load_json_as_dict(file_path)
+
+            status = {
+                'status': 'failed',
                 'output': results
             }
 

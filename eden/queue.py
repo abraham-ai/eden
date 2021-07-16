@@ -31,7 +31,8 @@ class QueueData(object):
         self.tokens = {
             'queued': [],
             'running': [],
-            'complete': []
+            'complete': [],
+            'failed': []
         }
 
         self.__all_tokens__ = []  ## write only
@@ -95,12 +96,28 @@ class QueueData(object):
 
         self.update_file()
 
+
+    def set_as_failed(self, token):
+        """move token from running to failed
+
+        Args:
+            token (str): token
+        """
+
+        self.tokens = load_json_as_dict(self.filename)
+
+        self.tokens['running'].remove(token)
+        self.tokens['failed'].append(token)
+
+        self.update_file()
+
+
     def get_status_all(self):
 
         status = {
             'filename': self.filename,
             'length': len(self.tokens),
-            'tokens': self.tokens,
+            'tokens': self.tokens
         }
 
         return status
@@ -130,17 +147,25 @@ class QueueData(object):
             status = {
                 'status': 'running',
                 'progress': progress
-
             }
-            
-            return status
 
         elif token in self.tokens['complete'] and not(token in self.tokens['running'] and token in self.tokens['queued']): 
-
+            
             status = {
                 'status': 'complete',
             }
-            return status
+
+        elif token in self.tokens['failed'] and not(token in self.tokens['running'] and token in self.tokens['queued']): 
+            
+            status = {
+                'status': 'failed'
+            }
+
+        else:
+            
+            status = {
+                'status': 'unknown'
+            }
 
         return status
 
@@ -152,7 +177,8 @@ class QueueData(object):
         self.tokens = {
             'queued': [],
             'running': [],
-            'complete': []
+            'complete': [],
+            'failed': []
         }
 
     def check_if_queued(self, token):
@@ -166,3 +192,7 @@ class QueueData(object):
     def check_if_complete(self, token):
         self.tokens = load_json_as_dict(self.filename)
         return True if (token in self.tokens['complete']) else False
+
+    def check_if_failed(self, token):
+        self.tokens = load_json_as_dict(self.filename)
+        return True if (token in self.tokens['failed']) else False
