@@ -20,16 +20,16 @@ Celery+redis is needed to be able to queue tasks
 from celery import Celery
 from .celery_utils import run_celery_app
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4):
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379):
 
     '''
     watch this celery worker live with:
     $ celery --broker="redis://localhost:6379" flower --port=6060 
     '''
-    celery_app = Celery(__name__)
+    celery_app = Celery(__name__, broker= f"redis://localhost:{str(redis_port)}")
 
-    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
-    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
+    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://localhost:{str(redis_port)}")
+    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     queue_data = QueueData()
 
