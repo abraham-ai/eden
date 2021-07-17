@@ -4,6 +4,12 @@ import warnings
 from .utils import write_json, load_json_as_dict, get_filename_from_token
 
 class QueueData(object):
+    """
+    Simple way to keep a track of the tasks done on multiple threads. 
+
+    Args:
+        filename (str): name of the json file where the data is stored. Defaults to: "__eden_queue__.json"
+    """
     def __init__(self, filename = '__eden_queue__.json'):
 
         """Example file: 
@@ -21,6 +27,10 @@ class QueueData(object):
             "complete": [
                 "green_1625591919_430tqllh",
                 "orange_1625591919_vd8x0kjx",
+            ],
+
+            "failed": [
+                "green_1626507310_mnn7swdx",
             ]
         }
 
