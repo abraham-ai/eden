@@ -61,7 +61,7 @@ class QueueData(object):
             token (str): token
             config (dict): should contain inputs
         """
-        self.tokens = load_json_as_dict(self.filename)
+        # self.tokens = load_json_as_dict(self.filename)
 
         self.tokens['queued'].append(token)
         self.update_file()
@@ -73,11 +73,18 @@ class QueueData(object):
         Args:
             token (str): token
         """
+        # try:
+        #     self.tokens = load_json_as_dict(self.filename)
+        # except:
+        #     print('COULD NOT LOAD JSON ', self.tokens)
 
-        self.tokens = load_json_as_dict(self.filename)
+        try:
+            self.tokens['queued'].remove(token)
+            self.tokens['running'].append(token)
 
-        self.tokens['queued'].remove(token)
-        self.tokens['running'].append(token)
+        except: 
+            print(self.tokens, 'could not find in queued:', token)
+            raise Exception
 
         self.update_file()
 
@@ -89,10 +96,14 @@ class QueueData(object):
             token (str): token
         """
 
-        self.tokens = load_json_as_dict(self.filename)
+        # self.tokens = load_json_as_dict(self.filename)
 
-        self.tokens['running'].remove(token)
-        self.tokens['complete'].append(token)
+        try:
+            self.tokens['running'].remove(token)
+            self.tokens['complete'].append(token)
+        except ValueError:
+            print(self.tokens, 'could not find in running:', token)
+            raise ValueError
 
         self.update_file()
 
@@ -104,7 +115,7 @@ class QueueData(object):
             token (str): token
         """
 
-        self.tokens = load_json_as_dict(self.filename)
+        # self.tokens = load_json_as_dict(self.filename)
 
         self.tokens['running'].remove(token)
         self.tokens['failed'].append(token)
