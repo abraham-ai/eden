@@ -6,7 +6,7 @@ c = Client(url = 'http://127.0.0.1:5656', username= 'abraham')
 config = {
     'prompt': 'let there be light',
     'number': 2233,
-    'input_image': Image('test_images/krusty_krab.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
+    'input_image': Image('cloud.jpg')  ## Image() supports jpg, png filenames, np.array or PIL.Image
 }
 
 '''
