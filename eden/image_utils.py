@@ -6,6 +6,8 @@ from PIL import Image
 from io import BytesIO
 
 def _encode_numpy_array_image(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
     if image.shape[-1] ==  3:
         _ , buffer = cv2.imencode('.jpg', image)
 
@@ -17,18 +19,18 @@ def _encode_numpy_array_image(image):
     return image_as_text
 
 
+def _encode_pil_image(image):
+    opencv_image = np.array(image)
+    image_as_text = _encode_numpy_array_image(image = opencv_image)
+    
+    return image_as_text
+
+
 def _encode_image_file(image):
     pil_image = Image.open(image)
-    opencv_image = np.array(pil_image) 
-    image_as_text = _encode_numpy_array_image(image = opencv_image)
 
-    return image_as_text
+    return _encode_pil_image(pil_image)
 
-def _encode_pil_image(image):
-    opencv_image = np.array(image) 
-    image_as_text = _encode_numpy_array_image(image = opencv_image)
-
-    return image_as_text
 
 def encode(image):
 
@@ -37,17 +39,16 @@ def encode(image):
         if type(image) == np.ndarray:
             image_as_text = _encode_numpy_array_image(image)
 
-        elif  type(image) == str:
+        elif type(image) == str:
             image_as_text = _encode_image_file(image)
         
         else:
-            # print('its a pil image ')
             image_as_text = _encode_pil_image(image)
 
         return image_as_text.decode('ascii')
 
     else:
-        raise Exception('expected numpy.array, PIL.Image or str, not: ',  str(type(image)))
+        raise Exception('expected numpy.array, PIL.Image or str, not: ', str(type(image)))
 
 
 def decode(jpg_as_text):
