@@ -20,7 +20,12 @@ Celery+redis is needed to be able to queue tasks
 from celery import Celery
 from .celery_utils import run_celery_app
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379):
+'''
+tool to allocate gpus on queued tasks
+'''
+from .gpu_allocator import GPUAllocator
+
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -42,6 +47,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     queue_data = QueueData()
+    gpu_allocator = GPUAllocator()
 
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
@@ -59,20 +65,23 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
         '''
-        available_gpu_ids = GPUtil.getAvailable(order = 'first', limit = 1, maxLoad = block.max_gpu_load, maxMemory = block.max_gpu_mem, includeNan=False, excludeID=[], excludeUUID=[])
+        gpu_name = gpu_allocator.get_gpu()
 
         '''
         If there are no GPUs available, then it returns a sad message.
         But if there ARE GPUs available, then it starts run()
         '''
-        if len(available_gpu_ids) == 0:
+        if gpu_name == None and requires_gpu == True: ## making sure there are no gpus available
+
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
             }
+            queue_data.set_as_running(token = token)
+            queue_data.set_as_failed(token = token)
 
         else:
 
-            args['__gpu__'] = 'cuda:' + str(available_gpu_ids[0])
+            args['__gpu__'] = gpu_name
 
             if block.progress == True:
                 args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
@@ -87,6 +96,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
                 write_json(dictionary = output,  path = filename)
                 queue_data.set_as_complete(token = token)
+                gpu_allocator.set_as_free(name = gpu_name)
+
                 
             except Exception as e:
                 output = {
@@ -95,6 +106,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 write_json(dictionary = output,  path = filename)
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
+                gpu_allocator.set_as_free(name = gpu_name)
 
 
     @app.post('/run')
