@@ -148,9 +148,12 @@ class QueueData(object):
         ## if the task has already started
         if token in self.tokens['queued'] and not(token in self.tokens['running'] and token in self.tokens['complete'] ):
 
+            status_of_running_tasks = [load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = t))['progress'] for t in self.tokens['running']]
+
             status =  {
                 'status': 'queued',
-                'waiting_behind': self.tokens['queued'].index(token)
+                'queue_position': 1 + self.tokens['queued'].index(token),
+                'status_of_running_tasks': status_of_running_tasks
             }
             return status
 
