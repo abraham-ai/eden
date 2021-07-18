@@ -22,10 +22,6 @@ from eden.datatypes import Image
 eden_block = BaseBlock()
 ```
 
-> Initiating a `BaseBlock` has 2 optional args. Both args are useful to accept/deny requests based on GPU usage. 
-> * `max_gpu_load`: specifies the maximum amount of GPU load, over which `eden` would deny requests.
-> * `max_gpu_mem`: specifies the maximum amount of GPU memory that should be allocated, over which `eden` would deny requests.
-
 `run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports text, images, and numbers as inputs.
 
 ```python 
@@ -34,15 +30,14 @@ my_args = {
         'input_image': Image(),  ## for image input
     }
 
-@eden_block.run(args = my_args)
+@eden_block.run(args = my_args, progress = True)
 def do_something(config): 
 
-    # print('doing something for: ', config['username'])
     prompt = config['prompt']
     pil_image = config['input_image']
-    device = config['__gpu__']  ## device is something like "cuda:0"
+    device = config['__gpu__']  ## "cuda:0" or something 
 
-    # do something with your image/text inputs here 
+    ## Do your stuff here
 
     return {
         'some_text': 'hello world',  ## returning text (str)
@@ -93,12 +88,15 @@ Fetching results/checking task status using the token can be done using `fetch()
 
 * If the task is queued, it returns something like `{'status': 'queued', 'waiting_behind': 9}`
 
+* If the task is in progress (60%), it returns: `{'status': 'running', 'progress': 0.6}`.
+
 * If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. 
 
 ```python
 results = c.fetch(token = run_response['token'])
 print(results)  
 ```
+
 ## Building directly from github repos
 
 To share your pipelines with the world, all that you have to do is to add an `eden.yml` file to the root directory of your github repository. 
