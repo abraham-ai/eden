@@ -1,18 +1,24 @@
 import os
 import json
 import uvicorn
-import GPUtil
 import threading
 import traceback
 from fastapi import FastAPI
 
-from .log_utils import Colors
-from uvicorn.config import LOGGING_CONFIG
-from .utils import parse_for_taking_request, write_json, make_filename_and_token, get_filename_from_token, load_json_as_dict
 from .datatypes import Image
-from .models import Credentials
-from .threaded_server import ThreadedServer
 from .queue import QueueData
+from .log_utils import Colors
+from .models import Credentials
+from uvicorn.config import LOGGING_CONFIG
+from .threaded_server import ThreadedServer
+
+from .utils import (
+    parse_for_taking_request, 
+    write_json, 
+    make_filename_and_token, 
+    get_filename_from_token, 
+    load_json_as_dict
+)
 
 '''
 Celery+redis is needed to be able to queue tasks
@@ -35,6 +41,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
         max_num_workers (int, optional): MAximum number of tasks to run in parallel. Defaults to 4.
         redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
+        requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
     """
 
     '''
@@ -84,6 +91,9 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             args['__gpu__'] = gpu_name
 
             if block.progress == True:
+                """
+                if progress was set to True on @eden.BaseBlock.run() decorator, then add a progress tracker into the config
+                """
                 args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
 
             queue_data.set_as_running(token = token)
