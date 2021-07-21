@@ -1,7 +1,8 @@
 import torch
+from .log_utils import Colors
 
 class GPUAllocator(object):
-    def __init__(self):
+    def __init__(self, exclude_gpu_ids: list = []):
 
         """
         Usage:
@@ -18,12 +19,18 @@ class GPUAllocator(object):
         self.gpu_names =  []
 
         for i in range(self.num_gpus):
-            self.gpu_names.append('cuda:' +  str(i))
+            if i in exclude_gpu_ids:
+                pass
+            else:
+                self.gpu_names.append('cuda:' +  str(i))
 
         self.usage = {}
 
         for i in range(self.num_gpus):
-            self.usage[i] = False
+            if i in exclude_gpu_ids:
+                pass
+            else:
+                self.usage[i] = False
 
         """
         on a good day, this is how the variables look like: 
@@ -42,8 +49,7 @@ class GPUAllocator(object):
         
         """
 
-
-        print('Initiated GPU allocator with: ', self.gpu_names)
+        print( "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + 'Initialized GPUAllocator with devices: ', self.gpu_names)
 
         """
         False: free 

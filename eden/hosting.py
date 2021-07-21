@@ -32,7 +32,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning'):
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -43,6 +43,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         max_num_workers (int, optional): MAximum number of tasks to run in parallel. Defaults to 4.
         redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
+        exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
     """
 
     '''
@@ -55,7 +56,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     queue_data = QueueData()
-    gpu_allocator = GPUAllocator()
+    gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
 
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
