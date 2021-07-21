@@ -21,6 +21,8 @@ def do_something(config):
     for i in range(10):
         config['__progress__'].update(1/10)
 
+    raise KeyError
+
     return {
         'prompt': config['prompt'],  ## returning text
         'number': some_number,       ## returning numbers
@@ -31,5 +33,6 @@ from eden.hosting import host_block
 
 host_block(
     block = eden_block, 
-    port= 5656
+    port= 5656,
+    log_level= 'warning' ## options : 'critical', 'error', 'warning', 'info', 'debug', 'trace'
 )

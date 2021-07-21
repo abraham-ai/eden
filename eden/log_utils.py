@@ -3,3 +3,15 @@ class Colors:
     GREEN = '\033[92m'
     WARNING = '\033[93m'
     END = '\033[0m'
+
+log_levels = [
+    'critical', 
+    'error', 
+    'warning', 
+    'info', 
+    'debug', 
+    'trace'
+]
+
+celery_log_levels = {}
+for level in log_levels: celery_log_levels[level] = level.upper()

@@ -11,6 +11,7 @@ from .log_utils import Colors
 from .models import Credentials
 from uvicorn.config import LOGGING_CONFIG
 from .threaded_server import ThreadedServer
+from .log_utils import log_levels, celery_log_levels
 
 from .utils import (
     parse_for_taking_request, 
@@ -31,7 +32,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True):
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning'):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -170,7 +171,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s"
 
-    config = uvicorn.config.Config(app = app, port=port)
+    config = uvicorn.config.Config(app = app, port=port, log_level= log_level)
     server = ThreadedServer(config = config)
 
     # context starts fastAPI stuff and run_celery_app starts celery
@@ -178,7 +179,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
-        run_celery_app(celery_app, max_num_workers=max_num_workers)
+        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level])
 
     message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Stopped"
     print(message)
