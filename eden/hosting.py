@@ -1,5 +1,6 @@
 import os
 import json
+import warnings
 import uvicorn
 import threading
 import traceback
@@ -18,7 +19,7 @@ from .utils import (
     write_json, 
     make_filename_and_token, 
     get_filename_from_token, 
-    load_json_as_dict
+    load_json_as_dict,
 )
 
 '''
@@ -57,6 +58,16 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
     queue_data = QueueData()
     gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
+
+    if gpu_allocator.num_gpus < max_num_workers and requires_gpu == True:
+        """
+        if a task requires a gpu, and the number of workers is > the number of available gpus, 
+        then max_num_workers is automatically set to the number of gpus available
+        this is because eden assumes that each task requires one gpu (all of it)
+        """
+        warnings.warn('max_num_workers is greater than the number of GPUs found, overriding max_num_workers to be: '+ str(gpu_allocator.num_gpus))
+        max_num_workers = gpu_allocator.num_gpus
+
 
     if not os.path.isdir(results_dir):
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
