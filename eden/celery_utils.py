@@ -1,4 +1,4 @@
-def run_celery_app(app, loglevel = 'INFO', max_num_workers = 4, pool = 'threads'):
+def run_celery_app(app, loglevel = 'ERROR', max_num_workers = 4, pool = 'threads', logfile = 'celery_logs.log'):
     """
     Runs a Celery() instance.
 
@@ -15,9 +15,10 @@ def run_celery_app(app, loglevel = 'INFO', max_num_workers = 4, pool = 'threads'
         'worker',
         f'--loglevel={loglevel}',
         f'--concurrency={max_num_workers}',
-        f'--pool={pool}'
+        f'--pool={pool}',
+        f'--logfile={logfile}',
     ]
 
-    print('Running with args: ', argv)
+    print('Running celery worker with args: ', argv)
     
     app.worker_main(argv)

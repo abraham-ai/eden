@@ -2,6 +2,7 @@ import os
 import json
 import warnings
 import uvicorn
+import logging
 import threading
 import traceback
 from fastapi import FastAPI
@@ -33,7 +34,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', exclude_gpu_ids: list = []):
+def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', logfile = 'eden_logs.log', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -130,6 +131,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
                 gpu_allocator.set_as_free(name = gpu_name)
+                raise
 
 
     @app.post('/run')
@@ -191,7 +193,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
-        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level])
+        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile)
 
     message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Stopped"
     print(message)
