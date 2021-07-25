@@ -32,5 +32,6 @@ from eden.hosting import host_block
 host_block(
     block = eden_block, 
     port= 5656,
-    log_level= 'warning' ## options : 'critical', 'error', 'warning', 'info', 'debug', 'trace'
+    logfile= 'eden_logs.log',
+    log_level= 'error'
 )
