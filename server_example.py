@@ -21,8 +21,6 @@ def do_something(config):
     for i in range(10):
         config['__progress__'].update(1/10)
 
-    raise KeyError
-
     return {
         'prompt': config['prompt'],  ## returning text
         'number': some_number,       ## returning numbers
