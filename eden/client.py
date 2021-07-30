@@ -11,12 +11,14 @@ class Client(object):
         url (str): URL which is printed on your eden block host.
         username (str, optional): Used to identify the client, for now it's only used for debugging. Defaults to 'client'.
         timeout (int, optional): Number of seconds to wait after sending a request before throwing a timeout error. Defaults to 100000.
+        verify_ssl (bool, optional): Verify SSL certificate of client URL. Defaults to True
     """
-    def __init__(self, url, username = 'client', timeout = 100000):
+    def __init__(self, url, username = 'client', timeout = 100000, verify_ssl = True):
         
         self.username = username
         self.url = url 
         self.timeout = timeout
+        self.verify_ssl = verify_ssl
 
     def run(self, config):
         """
@@ -39,7 +41,7 @@ class Client(object):
         """
         config['username'] = self.username
         config = parse_for_sending_request(config= config)
-        resp = requests.post(self.url + '/run', json=config, timeout = self.timeout)
+        resp = requests.post(self.url + '/run', json=config, timeout = self.timeout, verify = self.verify_ssl)
 
         try:
             resp = resp.json()
@@ -70,7 +72,7 @@ class Client(object):
         config = {
             'token': token
         }
-        resp = requests.post(self.url + '/fetch', timeout = self.timeout, json = config)
+        resp = requests.post(self.url + '/fetch', timeout = self.timeout, json = config, verify = self.verify_ssl)
 
         try:
             resp = resp.json()
