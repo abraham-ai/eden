@@ -1,5 +1,5 @@
 from tqdm import tqdm 
-from .utils import write_json, get_filename_from_token
+from .utils import update_json, get_filename_from_token
 
 
 class ProgressTracker():
@@ -19,13 +19,15 @@ class ProgressTracker():
         else: 
             self.bar = None
 
-    def update(self, n):
+    def update(self, n, data=None):
         if self.bar is not None:
             self.bar.update(n)
         self.value += n
-
+        
         status = {
             'progress': self.value
         }
-
-        write_json(dictionary = status, path = self.filename)
+        if data:
+            status['data'] = data
+        
+        update_json(dictionary = status, path = self.filename)

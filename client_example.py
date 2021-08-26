@@ -27,6 +27,23 @@ one eternity later
 import time
 time.sleep(5)
 
+
+'''
+change the config mid-task
+after change, returns same as fetch
+'''
+
+new_config = {'number': 2244}
+#results = c.update(token = run_response['token'], new_config = new_config)
+
+
+'''
+another eternity later
+'''
+import time
+time.sleep(5)
+
+
 '''
 if the task is complete: 
     returns {'status': 'complete', 'output': {your_outputs}}

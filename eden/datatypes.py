@@ -19,6 +19,6 @@ class Image(BaseDataType):
         super().__init__()
         self.type = 'eden.datatypes.Image'
         if image is not None:
-            self.data =  encode(image)
+            self.data = encode(image)
         else:
             pass

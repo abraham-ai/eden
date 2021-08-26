@@ -24,7 +24,7 @@ class BaseBlock(object):
         self.progress = False
 
     def get_progress_bar(self, results_dir, token = None, show_bar = False):
-        p = ProgressTracker(token = token, show_bar= show_bar, results_dir = results_dir)
+        p = ProgressTracker(token = token, show_bar = show_bar, results_dir = results_dir)
         return p
 
     def create_default_data_fields(self):

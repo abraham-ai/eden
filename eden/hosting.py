@@ -18,6 +18,7 @@ from .log_utils import log_levels, celery_log_levels
 from .utils import (
     parse_for_taking_request, 
     write_json, 
+    update_json,
     make_filename_and_token, 
     get_filename_from_token, 
     load_json_as_dict,
@@ -83,6 +84,12 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         args = parse_for_taking_request(args)
 
         '''
+        write initial results file with config
+        '''
+        config = {'config': args}
+        write_json(dictionary = config, path = filename)
+
+        '''
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
         '''
@@ -108,7 +115,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 """
                 if progress was set to True on @eden.BaseBlock.run() decorator, then add a progress tracker into the config
                 """
-                args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
+                args['__progress__'] = block.get_progress_bar(token= token, results_dir = results_dir)
 
             queue_data.set_as_running(token = token)
             
@@ -118,7 +125,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                     if isinstance(value, Image):
                         output[key] = value.__call__()
 
-                write_json(dictionary = output,  path = filename)
+                update_json(dictionary = output, path = filename)
                 queue_data.set_as_complete(token = token)
                 gpu_allocator.set_as_free(name = gpu_name)
 
@@ -127,7 +134,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 output = {
                     "error" : str(e)
                 }
-                write_json(dictionary = output,  path = filename)
+                update_json(dictionary = output,  path = filename)
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
                 gpu_allocator.set_as_free(name = gpu_name)

@@ -32,7 +32,6 @@ def parse_for_taking_request(response: dict = {}):
                 '''
     return response
 
-
 def parse_response_after_run(response: dict = {}):
 
 
@@ -58,10 +57,15 @@ def parse_response_after_run(response: dict = {}):
         response['output'] = resp_out
     return response
 
-
 def write_json(dictionary: dict, path:str):
     with open(path, "w") as write_file:
         json.dump(dictionary, write_file, indent=4)
+
+def update_json(dictionary: dict, path:str):
+    data = load_json_as_dict(path)
+    for key, value in dictionary.items():
+        data[key] = value
+    write_json(data, path)
 
 def make_filename_and_token(results_dir, username):
     id = make_id(username)
