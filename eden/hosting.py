@@ -78,17 +78,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     app =  FastAPI()
 
     @celery_app.task(name = 'run')
-    def run(args, filename, token):
-        
-        args = dict(args)
+    def run(args, filename:str, token:str):        
         args = parse_for_taking_request(args)
-
-        '''
-        write initial results file with config
-        '''
-        config = {'config': args}
-        write_json(dictionary = config, path = filename)
-
         '''
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
@@ -120,6 +111,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             queue_data.set_as_running(token = token)
             
             try:
+                args['__filename__'] = filename
                 output = block.__run__(args)
                 for key, value in output.items():
                     if isinstance(value, Image):
@@ -146,14 +138,56 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         
         filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
 
-        args = dict(args)
-        queue_data.join_queue(token = token, config = args)
 
+        args = dict(args)        
+        '''
+        write initial results file with config
+        '''
+        write_json(dictionary = args, path = filename)
+
+        queue_data.join_queue(token = token, config = args)
         run.delay(args = args, filename = filename, token = token)
         status = queue_data.get_status(token = token, results_dir = results_dir)
         status['token']  = token
 
         return status 
+
+    @app.post('/update')
+    def update(credentials: Credentials, config: block.data_model):
+        
+        token = credentials.token
+        
+        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
+            """
+            if the task is running or queued, the config gets updated
+            """
+            filename = get_filename_from_token(results_dir = results_dir, id = token)
+
+            my_dict = load_json_as_dict(filename=filename)
+            config = dict(config)
+            # config = parse_for_taking_request(config)
+
+            logging.info(config)
+
+            for key in list(config.keys()):
+                if key in list(my_dict.keys()):
+                    my_dict[key] = config[key]
+
+            write_json(dictionary = my_dict, path = filename)
+
+            return {
+                'status': 'successfully updated config'
+            }
+
+        
+        else:
+            """
+            Else it just throws an error
+            """
+            return {
+                'status': 'either its an invalid token, or the task is already complete'
+            }
+
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):

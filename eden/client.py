@@ -84,7 +84,7 @@ class Client(object):
 
 
     # still needs to be implemented
-    def update(self, token, config_update):
+    def update_config(self, token, config):
         """
         Update a config by sending request to the host with updated config
         parameters in config_update.
@@ -101,12 +101,21 @@ class Client(object):
             dict: either {'status': 'complete' 'output': {your_outputs}} or {'status': 'queued', 'waiting_behind': (some int)} or {'status': 'running'}
         """
 
+        config = {
+            'credentials':{
+                'token': token,
+            },
+            'config': config
+        }
+        resp = requests.post(self.url + '/update', timeout = self.timeout, json = config, verify = self.verify_ssl)
 
-
-
-        #resp = self.fetch(token = token)
-        
-        return None
+        try:
+            resp = resp.json()
+        except json.decoder.JSONDecodeError:
+            raise Exception('got invalid response from host: \n', str(resp))
+            
+        resp = parse_response_after_run(resp)
+        return resp
 
 
     def await_results(self, token, fetch_interval = 1, show_progress = True):
