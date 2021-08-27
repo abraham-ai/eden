@@ -16,10 +16,23 @@ def do_something(config):
     some_number = config['number']
     device = config['__gpu__']
 
-    # do something with your inputs here 
+    ## file whose contents get updated when the client calls: Client.update_config()
+    config_filename = config['__filename__']
 
     for i in range(10):
+
+        ## this is the stuff you need to read the updated config on the fly
+        from eden.utils import load_json_as_dict, parse_for_taking_request
+        new_config = parse_for_taking_request(load_json_as_dict(config_filename))
+
+
+        import logging
+        logging.info(new_config) ### this is just to write it into the logs for debugging
+
         config['__progress__'].update(1/10)
+
+        import time
+        time.sleep(1)
 
     return {
         'prompt': config['prompt'],  ## returning text
@@ -33,5 +46,5 @@ host_block(
     block = eden_block, 
     port= 5656,
     logfile= 'eden_logs.log',
-    log_level= 'error'
+    log_level= 'info'
 )
