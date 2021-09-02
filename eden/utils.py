@@ -33,28 +33,40 @@ def parse_for_taking_request(response: dict = {}):
     return response
 
 def parse_response_after_run(response: dict = {}):
+    
+    keys_to_parse = [
+        'config',
+        'output'
+    ]
 
+    print(list(response.keys()))
 
-    if 'output' in list(response.keys()):
-        resp_out = response['output']
+    for key in list(response.keys()):
+        if key in keys_to_parse:
+            print('parsing key -- ', key)
+            resp_out = response[key]
 
-        for key, value in resp_out.items():
+            for key, value in resp_out.items():
 
-            if isinstance(value, dict):
-                if 'type' in list(value.keys()):
-                    
-                    if value['type'] == 'eden.datatypes.Image':
-                        resp_out[key] = decode(resp_out[key]['data'])
+                if isinstance(value, dict):
+                    if 'type' in list(value.keys()):
+                        
+                        if value['type'] == 'eden.datatypes.Image':
+                            resp_out[key] = decode(resp_out[key]['data'])
 
-                    '''
-                    as we add more datatypes, just add them in here like: 
+                        '''
+                        as we add more datatypes, just add them in here like: 
 
-                    if value['type'] == 'eden.datatypes.some_type':
-                        resp_out[key] = decode_some_type(resp_out[key]['data'])
+                        if value['type'] == 'eden.datatypes.some_type':
+                            resp_out[key] = decode_some_type(resp_out[key]['data'])
 
-                    '''
+                        '''
 
-        response['output'] = resp_out
+            response[key] = resp_out
+        else:
+            # print('not parsing', key)
+            pass
+
     return response
 
 def write_json(dictionary: dict, path:str):
@@ -81,8 +93,8 @@ def make_id(username):
     id = username + "_"+ str(int(time.time())) + "_" + generate_random_string(len = 8)
     return id
 
-def get_filename_from_token(results_dir, id):
-    filename = results_dir + "/" + id + '.json'
+def get_filename_from_token(results_dir, token):
+    filename = results_dir + "/" + token + '.json'
     return filename
 
 def load_json_as_dict(filename):
@@ -90,3 +102,7 @@ def load_json_as_dict(filename):
         data = json.load(json_file)
     
     return data 
+
+def load_json_from_token(token, results_dir):
+    filename = get_filename_from_token(token = token, results_dir = results_dir)
+    return load_json_as_dict(filename)

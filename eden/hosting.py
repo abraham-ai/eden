@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import warnings
 import uvicorn
@@ -22,6 +23,7 @@ from .utils import (
     make_filename_and_token, 
     get_filename_from_token, 
     load_json_as_dict,
+    load_json_from_token
 )
 
 '''
@@ -43,10 +45,56 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         block (eden.block.BaseBlock): The eden block you'd want to host. 
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
         results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
-        max_num_workers (int, optional): MAximum number of tasks to run in parallel. Defaults to 4.
+        max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
         redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
+
+    Response templates: 
+    
+    /run: 
+        {
+            'token': some_long_token,
+        }
+
+    /fetch: 
+        if task is queued:
+            {
+                'status': {
+                    'status': queued,
+                    'queue_position': int
+                },
+                config: current_config
+            }
+
+        elif task is running:
+            {
+                'status': {
+                    'status': 'running',
+                    'progress': float between 0 and 1,
+
+                },
+                config: current_config,
+                'output': {}  ## optionally the user should be able to write outputs here
+            }
+        elif task failed:
+            {
+                'status': {
+                    'status': 'failed',
+                    'error': 'some boring error messsage'
+                    
+                }
+                config: current_config,
+                'output': {}  ## will still include the outputs if any so that it gets returned even though the task failed
+            }
+        elif task succeeded:
+            {
+                'status': {
+                    'status': 'complete'
+                },
+                'output': user_output,
+                'config': config
+            }
     """
 
     '''
@@ -117,16 +165,21 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                     if isinstance(value, Image):
                         output[key] = value.__call__()
 
-                update_json(dictionary = output, path = filename)
+                d = load_json_from_token(token = token, results_dir = results_dir)
+                d['output'] = output
+                update_json(dictionary = d, path = filename)
                 queue_data.set_as_complete(token = token)
                 gpu_allocator.set_as_free(name = gpu_name)
 
                 
-            except Exception as e:
-                output = {
-                    "error" : str(e)
-                }
-                update_json(dictionary = output,  path = filename)
+            except:
+                e =  str(traceback.format_exc( limit= 10))
+
+                d = load_json_from_token(token = token, results_dir = results_dir)
+                d['status'] = 'failed'
+                d['error'] = e
+                update_json(dictionary = d, path = filename)
+                
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
                 gpu_allocator.set_as_free(name = gpu_name)
@@ -134,23 +187,33 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
 
     @app.post('/run')
-    def start_run(args: block.data_model):
+    def start_run(config: block.data_model):
         
-        filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
+        filename, token = make_filename_and_token(results_dir = results_dir, username = config.username)
 
-
-        args = dict(args)        
+        config = dict(config)        
         '''
         write initial results file with config
         '''
-        write_json(dictionary = args, path = filename)
+        initial_dict = {
+            'status': {},
+            'config': config,
+            'output': {}
+        }
 
-        queue_data.join_queue(token = token, config = args)
-        run.delay(args = args, filename = filename, token = token)
+        write_json(dictionary = initial_dict, path = filename)
+
+        queue_data.join_queue(token = token, config = config)
+
+        run.delay(args = config, filename = filename, token = token)
         status = queue_data.get_status(token = token, results_dir = results_dir)
-        status['token']  = token
+        
+        response = {
+            'status': status,
+            'token': token
+        }
 
-        return status 
+        return response 
 
     @app.post('/update')
     def update(credentials: Credentials, config: block.data_model):
@@ -161,22 +224,24 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             """
             if the task is running or queued, the config gets updated
             """
-            filename = get_filename_from_token(results_dir = results_dir, id = token)
+            my_dict = load_json_from_token(token = token, results_dir = results_dir)
 
-            my_dict = load_json_as_dict(filename=filename)
             config = dict(config)
-            # config = parse_for_taking_request(config)
-
-            logging.info(config)
 
             for key in list(config.keys()):
-                if key in list(my_dict.keys()):
+                if key in list(my_dict['config'].keys()):
                     my_dict[key] = config[key]
 
+            filename = get_filename_from_token(token = token, results_dir = results_dir)
             write_json(dictionary = my_dict, path = filename)
 
             return {
                 'status': 'successfully updated config'
+            }
+
+        elif queue_data.check_if_complete(token = token):
+            return {
+                'status': 'task is aleady complete'
             }
 
         
@@ -185,42 +250,83 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             Else it just throws an error
             """
             return {
-                'status': 'either its an invalid token, or the task is already complete'
+                'status': 'invalid token'
             }
 
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):
 
+        """all that I have to do is edit this function mostly hehe 
+
+        Returns:
+            [type]: [description]
+        """
+
         token = credentials.token
 
-        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
+        status = queue_data.get_status(token = token, results_dir = results_dir)
 
-            status = queue_data.get_status(token = token, results_dir = results_dir)
+        if status['status'] != 'invalid token':
 
-            return status
+            if queue_data.check_if_queued(token = token):
 
-        elif queue_data.check_if_complete(token = token):
-            file_path = get_filename_from_token(results_dir = results_dir, id = token)
-            results = load_json_as_dict(file_path)
+                config = load_json_from_token(token = token, results_dir = results_dir)
 
-            status = {
-                'status': 'complete',
-                'output': results
+                response = {
+                    'status': status,
+                    'config': config   
+                }
+
+                return response
+
+            elif queue_data.check_if_running(token = token):
+
+                try:
+                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
+                except json.decoder.JSONDecodeError:
+                    import time 
+                    time.sleep(1e-3)
+                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+                response = {
+                    'status': status,
+                    'config': output_dict['config'] ,
+                    # 'output': output_dict['output'] 
+                }
+
+                response['status']['progress'] = block.progress_tracker.value
+
+                return response
+
+            elif queue_data.check_if_failed(token = token):
+
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+                response = {
+                    'status': status,
+                    'config': output_dict['config'] ,
+                    'output': output_dict['output'] 
+                }
+
+                return response
+
+            elif queue_data.check_if_complete(token = token):
+
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+                response = {
+                    'status': status,
+                    # 'config': output_dict['config'] ,
+                    'output': output_dict['output'] 
+                }
+
+                return response
+
+        else:
+            response = {
+                'status': 'invalid token'
             }
-
-            return status
-
-        elif queue_data.check_if_failed(token = token):
-            file_path = get_filename_from_token(results_dir = results_dir, id = token)
-            results = load_json_as_dict(file_path)
-
-            status = {
-                'status': 'failed',
-                'output': results
-            }
-
-            return status
 
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
