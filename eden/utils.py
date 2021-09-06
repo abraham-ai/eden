@@ -32,40 +32,30 @@ def parse_for_taking_request(response: dict = {}):
                 '''
     return response
 
-def parse_response_after_run(response: dict = {}):
+def find_and_decode_images(d: dict):
+
+    for key, value in d.items():
+        
+        if isinstance(value, dict):
+
+            if 'type' in list(value.keys()):
+                
+                if value['type'] == 'eden.datatypes.Image':
+                    d[key] = decode(d[key]['data'])
+    return d
+        
+
+
+def parse_response_after_run(response: dict):
     
     keys_to_parse = [
         'config',
         'output'
     ]
 
-    print(list(response.keys()))
-
-    for key in list(response.keys()):
-        if key in keys_to_parse:
-            print('parsing key -- ', key)
-            resp_out = response[key]
-
-            for key, value in resp_out.items():
-
-                if isinstance(value, dict):
-                    if 'type' in list(value.keys()):
-                        
-                        if value['type'] == 'eden.datatypes.Image':
-                            resp_out[key] = decode(resp_out[key]['data'])
-
-                        '''
-                        as we add more datatypes, just add them in here like: 
-
-                        if value['type'] == 'eden.datatypes.some_type':
-                            resp_out[key] = decode_some_type(resp_out[key]['data'])
-
-                        '''
-
-            response[key] = resp_out
-        else:
-            # print('not parsing', key)
-            pass
+    for key in list(keys_to_parse):
+        if key in list(response.keys()):
+            response[key] = find_and_decode_images(d = response[key])
 
     return response
 

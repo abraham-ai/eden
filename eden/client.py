@@ -101,12 +101,15 @@ class Client(object):
             dict: either {'status': 'complete' 'output': {your_outputs}} or {'status': 'queued', 'waiting_behind': (some int)} or {'status': 'running'}
         """
 
+        config = parse_for_sending_request(config= config)
+
         config = {
             'credentials':{
                 'token': token,
             },
             'config': config
         }
+
         resp = requests.post(self.url + '/update', timeout = self.timeout, json = config, verify = self.verify_ssl)
 
         try:

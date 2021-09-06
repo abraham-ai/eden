@@ -80,9 +80,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         elif task failed:
             {
                 'status': {
-                    'status': 'failed',
-                    'error': 'some boring error messsage'
-                    
+                    'status': 'failed',                    
                 }
                 config: current_config,
                 'output': {}  ## will still include the outputs if any so that it gets returned even though the task failed
@@ -107,16 +105,21 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     queue_data = QueueData()
-    gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
 
-    if gpu_allocator.num_gpus < max_num_workers and requires_gpu == True:
-        """
-        if a task requires a gpu, and the number of workers is > the number of available gpus, 
-        then max_num_workers is automatically set to the number of gpus available
-        this is because eden assumes that each task requires one gpu (all of it)
-        """
-        warnings.warn('max_num_workers is greater than the number of GPUs found, overriding max_num_workers to be: '+ str(gpu_allocator.num_gpus))
-        max_num_workers = gpu_allocator.num_gpus
+    if requires_gpu == True:
+        gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
+    else:
+         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initiating server with no GPUs since requires_gpu = False")
+        
+    if requires_gpu == True:
+        if gpu_allocator.num_gpus < max_num_workers:
+            """
+            if a task requires a gpu, and the number of workers is > the number of available gpus, 
+            then max_num_workers is automatically set to the number of gpus available
+            this is because eden assumes that each task requires one gpu (all of it)
+            """
+            warnings.warn('max_num_workers is greater than the number of GPUs found, overriding max_num_workers to be: '+ str(gpu_allocator.num_gpus))
+            max_num_workers = gpu_allocator.num_gpus
 
 
     if not os.path.isdir(results_dir):
@@ -132,7 +135,12 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
         '''
-        gpu_name = gpu_allocator.get_gpu()
+
+        if requires_gpu == True:
+            # returns None if there are no gpus available
+            gpu_name = gpu_allocator.get_gpu()
+        else:
+            gpu_name = None  ## default value either if there are no gpus available or requires_gpu = False
 
         '''
         If there are no GPUs available, then it returns a sad message.
@@ -148,7 +156,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
         else:
 
-            args['__gpu__'] = gpu_name
+            if requires_gpu == True:
+                args['__gpu__'] = gpu_name
 
             if block.progress == True:
                 """
@@ -167,22 +176,28 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
                 d = load_json_from_token(token = token, results_dir = results_dir)
                 d['output'] = output
+                d['status'] = {'status': 'complete'}
                 update_json(dictionary = d, path = filename)
                 queue_data.set_as_complete(token = token)
-                gpu_allocator.set_as_free(name = gpu_name)
+
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
 
                 
             except:
                 e =  str(traceback.format_exc( limit= 10))
 
                 d = load_json_from_token(token = token, results_dir = results_dir)
-                d['status'] = 'failed'
+                d['status'] = {'status': 'failed'}
                 d['error'] = e
                 update_json(dictionary = d, path = filename)
                 
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
-                gpu_allocator.set_as_free(name = gpu_name)
+
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
+
                 raise
 
 
@@ -196,7 +211,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         write initial results file with config
         '''
         initial_dict = {
-            'status': {},
+            'status': {'status': '__none__'},
             'config': config,
             'output': {}
         }
@@ -292,7 +307,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 response = {
                     'status': status,
                     'config': output_dict['config'] ,
-                    # 'output': output_dict['output'] 
+                    'output': output_dict['output'] 
                 }
 
                 response['status']['progress'] = block.progress_tracker.value
@@ -302,9 +317,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             elif queue_data.check_if_failed(token = token):
 
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
-
                 response = {
-                    'status': status,
+                    'status': {'status': 'failed'},
                     'config': output_dict['config'] ,
                     'output': output_dict['output'] 
                 }
@@ -315,18 +329,17 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
-                response = {
-                    'status': status,
-                    # 'config': output_dict['config'] ,
-                    'output': output_dict['output'] 
-                }
+                output_dict['status']= {'status': 'complete'}
 
-                return response
+                return output_dict
 
         else:
             response = {
-                'status': 'invalid token'
+                'status': {
+                    'status':'invalid token'
+                    }
             }
+            return response
 
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
