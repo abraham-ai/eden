@@ -165,7 +165,13 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 """
                 args['__progress__'] = block.get_progress_bar(token= token, results_dir = results_dir)
 
+            ## Set token as running in eden.queue.QueueData
             queue_data.set_as_running(token = token)
+
+            ## Set token as running in {results_dir}/{token}.json
+            d = load_json_from_token(token = token, results_dir = results_dir)
+            d['status'] = {'status': 'running'}
+            update_json(dictionary = d, path = filename)
             
             try:
                 args['__filename__'] = filename
@@ -187,11 +193,13 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             except:
                 e =  str(traceback.format_exc( limit= 10))
 
+                ## set task as failed in {results_dir}/{token}.json
                 d = load_json_from_token(token = token, results_dir = results_dir)
                 d['status'] = {'status': 'failed'}
                 d['error'] = e
                 update_json(dictionary = d, path = filename)
                 
+                ## set task as failed in QueueData
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
 
