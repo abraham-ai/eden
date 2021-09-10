@@ -286,11 +286,11 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
             if queue_data.check_if_queued(token = token):
 
-                config = load_json_from_token(token = token, results_dir = results_dir)
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
                 response = {
                     'status': status,
-                    'config': config   
+                    'config': output_dict['config'] ,
                 }
 
                 return response
