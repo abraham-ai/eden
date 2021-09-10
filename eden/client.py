@@ -82,6 +82,45 @@ class Client(object):
         resp = parse_response_after_run(resp)
         return resp
 
+
+    # still needs to be implemented
+    def update_config(self, token, config):
+        """
+        Update a config by sending request to the host with updated config
+        parameters in config_update.
+        Returns to the user the same as fetch method.
+
+        Args:
+            token (str): token you received after running `some_client.run()
+            config_update (dict): Dictionary that contains any config parameters that need to be updated. Non-changed parameters may be omitted. 
+
+        Raises:
+            json.decoder.JSONDecodeError: If an invalid json is returned which cannot be decoded.
+
+        Returns:
+            dict: either {'status': 'complete' 'output': {your_outputs}} or {'status': 'queued', 'waiting_behind': (some int)} or {'status': 'running'}
+        """
+
+        config = parse_for_sending_request(config= config)
+
+        config = {
+            'credentials':{
+                'token': token,
+            },
+            'config': config
+        }
+
+        resp = requests.post(self.url + '/update', timeout = self.timeout, json = config, verify = self.verify_ssl)
+
+        try:
+            resp = resp.json()
+        except json.decoder.JSONDecodeError:
+            raise Exception('got invalid response from host: \n', str(resp))
+            
+        resp = parse_response_after_run(resp)
+        return resp
+
+
     def await_results(self, token, fetch_interval = 1, show_progress = True):
 
         while True:

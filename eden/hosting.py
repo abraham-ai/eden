@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import warnings
 import uvicorn
@@ -18,9 +19,11 @@ from .log_utils import log_levels, celery_log_levels
 from .utils import (
     parse_for_taking_request, 
     write_json, 
+    update_json,
     make_filename_and_token, 
     get_filename_from_token, 
     load_json_as_dict,
+    load_json_from_token
 )
 
 '''
@@ -42,10 +45,54 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         block (eden.block.BaseBlock): The eden block you'd want to host. 
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
         results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
-        max_num_workers (int, optional): MAximum number of tasks to run in parallel. Defaults to 4.
+        max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
         redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
+
+    Response templates: 
+    
+    /run: 
+        {
+            'token': some_long_token,
+        }
+
+    /fetch: 
+        if task is queued:
+            {
+                'status': {
+                    'status': queued,
+                    'queue_position': int
+                },
+                config: current_config
+            }
+
+        elif task is running:
+            {
+                'status': {
+                    'status': 'running',
+                    'progress': float between 0 and 1,
+
+                },
+                config: current_config,
+                'output': {}  ## optionally the user should be able to write outputs here
+            }
+        elif task failed:
+            {
+                'status': {
+                    'status': 'failed',                    
+                }
+                'config': current_config,
+                'output': {}  ## will still include the outputs if any so that it gets returned even though the task failed
+            }
+        elif task succeeded:
+            {
+                'status': {
+                    'status': 'complete'
+                },
+                'output': user_output,
+                'config': config
+            }
     """
 
     '''
@@ -58,16 +105,21 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     queue_data = QueueData()
-    gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
 
-    if gpu_allocator.num_gpus < max_num_workers and requires_gpu == True:
-        """
-        if a task requires a gpu, and the number of workers is > the number of available gpus, 
-        then max_num_workers is automatically set to the number of gpus available
-        this is because eden assumes that each task requires one gpu (all of it)
-        """
-        warnings.warn('max_num_workers is greater than the number of GPUs found, overriding max_num_workers to be: '+ str(gpu_allocator.num_gpus))
-        max_num_workers = gpu_allocator.num_gpus
+    if requires_gpu == True:
+        gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
+    else:
+         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initiating server with no GPUs since requires_gpu = False")
+        
+    if requires_gpu == True:
+        if gpu_allocator.num_gpus < max_num_workers:
+            """
+            if a task requires a gpu, and the number of workers is > the number of available gpus, 
+            then max_num_workers is automatically set to the number of gpus available
+            this is because eden assumes that each task requires one gpu (all of it)
+            """
+            warnings.warn('max_num_workers is greater than the number of GPUs found, overriding max_num_workers to be: '+ str(gpu_allocator.num_gpus))
+            max_num_workers = gpu_allocator.num_gpus
 
 
     if not os.path.isdir(results_dir):
@@ -77,16 +129,18 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     app =  FastAPI()
 
     @celery_app.task(name = 'run')
-    def run(args, filename, token):
-        
-        args = dict(args)
+    def run(args, filename:str, token:str):        
         args = parse_for_taking_request(args)
-
         '''
         allocating a GPU ID to the tast based on usage
         for now let's settle for max 1 GPU per task :(
         '''
-        gpu_name = gpu_allocator.get_gpu()
+
+        if requires_gpu == True:
+            # returns None if there are no gpus available
+            gpu_name = gpu_allocator.get_gpu()
+        else:
+            gpu_name = None  ## default value either if there are no gpus available or requires_gpu = False
 
         '''
         If there are no GPUs available, then it returns a sad message.
@@ -102,84 +156,190 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
         else:
 
-            args['__gpu__'] = gpu_name
+            if requires_gpu == True:
+                args['__gpu__'] = gpu_name
 
             if block.progress == True:
                 """
                 if progress was set to True on @eden.BaseBlock.run() decorator, then add a progress tracker into the config
                 """
-                args['__progress__'] = block.get_progress_bar(token= token,  results_dir = results_dir)
+                args['__progress__'] = block.get_progress_bar(token= token, results_dir = results_dir)
 
             queue_data.set_as_running(token = token)
             
             try:
+                args['__filename__'] = filename
                 output = block.__run__(args)
                 for key, value in output.items():
                     if isinstance(value, Image):
                         output[key] = value.__call__()
 
-                write_json(dictionary = output,  path = filename)
+                d = load_json_from_token(token = token, results_dir = results_dir)
+                d['output'] = output
+                d['status'] = {'status': 'complete'}
+                update_json(dictionary = d, path = filename)
                 queue_data.set_as_complete(token = token)
-                gpu_allocator.set_as_free(name = gpu_name)
+
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
 
                 
-            except Exception as e:
-                output = {
-                    "error" : str(e)
-                }
-                write_json(dictionary = output,  path = filename)
+            except:
+                e =  str(traceback.format_exc( limit= 10))
+
+                d = load_json_from_token(token = token, results_dir = results_dir)
+                d['status'] = {'status': 'failed'}
+                d['error'] = e
+                update_json(dictionary = d, path = filename)
+                
                 queue_data.set_as_failed(token = token)
                 traceback.print_exc()
-                gpu_allocator.set_as_free(name = gpu_name)
+
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
+
                 raise
 
 
     @app.post('/run')
-    def start_run(args: block.data_model):
+    def start_run(config: block.data_model):
         
-        filename, token = make_filename_and_token(results_dir = results_dir, username = args.username)
+        filename, token = make_filename_and_token(results_dir = results_dir, username = config.username)
 
-        args = dict(args)
-        queue_data.join_queue(token = token, config = args)
+        config = dict(config)        
+        '''
+        write initial results file with config
+        '''
+        initial_dict = {
+            'status': {'status': '__none__'},
+            'config': config,
+            'output': {}
+        }
 
-        run.delay(args = args, filename = filename, token = token)
+        write_json(dictionary = initial_dict, path = filename)
+
+        queue_data.join_queue(token = token, config = config)
+
+        run.delay(args = config, filename = filename, token = token)
         status = queue_data.get_status(token = token, results_dir = results_dir)
-        status['token']  = token
+        
+        response = {
+            'status': status,
+            'token': token
+        }
 
-        return status 
+        return response 
+
+    @app.post('/update')
+    def update(credentials: Credentials, config: block.data_model):
+        
+        token = credentials.token
+        
+        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
+            """
+            if the task is running or queued, the config gets updated
+            """
+            my_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+            config = dict(config)
+
+            for key in list(config.keys()):
+                if key in list(my_dict['config'].keys()):
+                    my_dict[key] = config[key]
+
+            filename = get_filename_from_token(token = token, results_dir = results_dir)
+            write_json(dictionary = my_dict, path = filename)
+
+            return {
+                'status': 'successfully updated config'
+            }
+
+        elif queue_data.check_if_complete(token = token):
+            return {
+                'status': 'task is aleady complete'
+            }
+
+        
+        else:
+            """
+            Else it just throws an error
+            """
+            return {
+                'status': 'invalid token'
+            }
+
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):
 
+        """all that I have to do is edit this function mostly hehe 
+
+        Returns:
+            [type]: [description]
+        """
+
         token = credentials.token
 
-        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
+        status = queue_data.get_status(token = token, results_dir = results_dir)
 
-            status = queue_data.get_status(token = token, results_dir = results_dir)
+        if status['status'] != 'invalid token':
 
-            return status
+            if queue_data.check_if_queued(token = token):
 
-        elif queue_data.check_if_complete(token = token):
-            file_path = get_filename_from_token(results_dir = results_dir, id = token)
-            results = load_json_as_dict(file_path)
+                config = load_json_from_token(token = token, results_dir = results_dir)
 
-            status = {
-                'status': 'complete',
-                'output': results
+                response = {
+                    'status': status,
+                    'config': config   
+                }
+
+                return response
+
+            elif queue_data.check_if_running(token = token):
+
+                try:
+                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
+                except json.decoder.JSONDecodeError:
+                    import time 
+                    time.sleep(1e-3)
+                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+                response = {
+                    'status': status,
+                    'config': output_dict['config'] ,
+                    'output': output_dict['output'] 
+                }
+
+                response['status']['progress'] = block.progress_tracker.value
+
+                return response
+
+            elif queue_data.check_if_failed(token = token):
+
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
+                response = {
+                    'status': {'status': 'failed'},
+                    'config': output_dict['config'] ,
+                    'output': output_dict['output'] 
+                }
+
+                return response
+
+            elif queue_data.check_if_complete(token = token):
+
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
+                output_dict['status']= {'status': 'complete'}
+
+                return output_dict
+
+        else:
+            response = {
+                'status': {
+                    'status':'invalid token'
+                    }
             }
-
-            return status
-
-        elif queue_data.check_if_failed(token = token):
-            file_path = get_filename_from_token(results_dir = results_dir, id = token)
-            results = load_json_as_dict(file_path)
-
-            status = {
-                'status': 'failed',
-                'output': results
-            }
-
-            return status
+            return response
 
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"

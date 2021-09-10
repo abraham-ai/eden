@@ -3,3 +3,5 @@ env-eden/
 __pycache__/
 results/
 results_client/
+__eden_queue__.json
+*.log

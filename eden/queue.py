@@ -1,4 +1,5 @@
 import os 
+import json
 from .log_utils import Colors
 import warnings
 from .utils import write_json, load_json_as_dict, get_filename_from_token
@@ -132,17 +133,6 @@ class QueueData(object):
 
         self.update_file()
 
-
-    def get_status_all(self):
-
-        status = {
-            'filename': self.filename,
-            'length': len(self.tokens),
-            'tokens': self.tokens
-        }
-
-        return status
-
     def get_status(self, token, results_dir):
 
         ## if the task has already started
@@ -160,18 +150,9 @@ class QueueData(object):
 
         elif token in self.tokens['running'] and not(token in self.tokens['queued'] and token in self.tokens['complete']):
 
-            try:
-                progress = round(load_json_as_dict(filename= get_filename_from_token(results_dir = results_dir, id = token))['progress'], 3)
-            except:                
-                warn_message = f"""QueueData.get_status: {get_filename_from_token(results_dir = results_dir, id = token)} is not found, this is probably because you set progress = True on @eden.BaseBlock.run() but did not update progress. 
-                If you do not understand whats going on, just set progress = False on @eden.BaseBlock.run()
-                """
-                warnings.warn(warn_message)
-                progress = None
-
             status = {
                 'status': 'running',
-                'progress': progress
+                'progress': '__none__'  ## gets its value later from block.progress_tracker.value
             }
 
         elif token in self.tokens['complete'] and not(token in self.tokens['running'] and token in self.tokens['queued']): 
@@ -184,6 +165,12 @@ class QueueData(object):
             
             status = {
                 'status': 'failed'
+            }
+
+        elif not(token in self.tokens['failed']) and not(token in self.tokens['running']) and not(token in self.tokens['queued']): 
+            
+            status = {
+                'status': 'invalid token',
             }
 
         else:
@@ -207,17 +194,33 @@ class QueueData(object):
         }
 
     def check_if_queued(self, token):
-        self.tokens = load_json_as_dict(self.filename)
+        try:
+            self.tokens = load_json_as_dict(self.filename)
+            return True if token in self.tokens['queued'] else False
+        except json.decoder.JSONDecodeError:
+            warnings.warn(f'eden.queue.QueueData: failed to load {self.filename} from storage, using local variable')
         return True if token in self.tokens['queued'] else False
 
     def check_if_running(self, token):
-        self.tokens = load_json_as_dict(self.filename)
+        try:
+            self.tokens = load_json_as_dict(self.filename)
+            return True if token in self.tokens['running'] else False
+        except json.decoder.JSONDecodeError:
+            warnings.warn(f'eden.queue.QueueData: failed to load {self.filename} from storage, using local variable')
         return True if token in self.tokens['running'] else False
 
     def check_if_complete(self, token):
-        self.tokens = load_json_as_dict(self.filename)
-        return True if (token in self.tokens['complete']) else False
+        try:
+            self.tokens = load_json_as_dict(self.filename)
+            return True if token in self.tokens['complete'] else False
+        except json.decoder.JSONDecodeError:
+            warnings.warn(f'eden.queue.QueueData: failed to load {self.filename} from storage, using local variable')
+        return True if token in self.tokens['complete'] else False
 
     def check_if_failed(self, token):
-        self.tokens = load_json_as_dict(self.filename)
-        return True if (token in self.tokens['failed']) else False
+        try:
+            self.tokens = load_json_as_dict(self.filename)
+            return True if token in self.tokens['failed'] else False
+        except json.decoder.JSONDecodeError:
+            warnings.warn(f'eden.queue.QueueData: failed to load {self.filename} from storage, using local variable')
+        return True if token in self.tokens['failed'] else False

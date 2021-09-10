@@ -25,7 +25,23 @@ print(results)
 one eternity later
 '''
 import time
-time.sleep(5)
+time.sleep(2)
+
+
+'''
+change the config mid-task
+'''
+
+config['prompt'] = 'abraham really likes carrots'
+resp = c.update_config(token = run_response['token'], config = config)
+print(resp)
+
+'''
+another eternity later
+'''
+import time
+time.sleep(10)
+
 
 '''
 if the task is complete: 
@@ -34,5 +50,6 @@ else
     returns {'status': 'running'}
 '''
 results = c.fetch(token = run_response['token'])
+print(results)
 pil_image = results['output']['image']
 pil_image.save('saved_from_server.png')
