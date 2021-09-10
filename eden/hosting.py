@@ -82,7 +82,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                 'status': {
                     'status': 'failed',                    
                 }
-                config: current_config,
+                'config': current_config,
                 'output': {}  ## will still include the outputs if any so that it gets returned even though the task failed
             }
         elif task succeeded:

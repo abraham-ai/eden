@@ -1,4 +1,5 @@
-import torch
+import nvidia_smi
+
 from .log_utils import Colors
 
 class GPUAllocator(object):
@@ -15,7 +16,10 @@ class GPUAllocator(object):
         g.set_as_free(gpu_id)
 
         """
-        self.num_gpus = torch.cuda.device_count()
+
+        nvidia_smi.nvmlInit()
+
+        self.num_gpus = nvidia_smi.nvmlDeviceGetCount()
         self.gpu_names =  []
 
         for i in range(self.num_gpus):
