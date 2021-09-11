@@ -136,3 +136,18 @@ class Client(object):
 
         return resp
 
+    def stop_host(self, time = 10):
+        config = {
+            'time_to_wait': time
+        }
+        try:
+            resp = requests.post(self.url + '/stop', timeout = self.timeout, json = config, verify = self.verify_ssl)
+        except requests.exceptions.ConnectionError:
+            """ 
+            This exception is very much expected here since the host would be stopping itself.
+            """
+            return {
+                    'status': {
+                    'status': 'stopped'
+                    }
+                }

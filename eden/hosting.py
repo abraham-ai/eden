@@ -23,8 +23,13 @@ from .utils import (
     make_filename_and_token, 
     get_filename_from_token, 
     load_json_as_dict,
-    load_json_from_token
+    load_json_from_token,
+    stop_everything_gracefully
 )
+
+## needed to self terminate script
+import  threading, psutil
+import asyncio
 
 '''
 Celery+redis is needed to be able to queue tasks
@@ -348,6 +353,21 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                     }
             }
             return response
+
+        
+        
+
+    @app.post("/stop")
+    async def stop(config:dict):
+        """
+        Stops the eden block, and exits the script
+
+        Args:
+            config (dict, optional): Amount of time in seconds before the server shuts down. Defaults to {'time': 0}.
+        """
+        logging.info(f'Stopping gracefully in {config["time_to_wait"]} seconds')
+        stop_everything_gracefully(t = config['time_to_wait'])
+        
 
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"

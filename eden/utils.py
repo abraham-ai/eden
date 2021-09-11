@@ -1,6 +1,8 @@
 from .datatypes import Image
 from .image_utils import decode
 
+
+import os
 import json
 import time
 import secrets, string
@@ -96,3 +98,7 @@ def load_json_as_dict(filename):
 def load_json_from_token(token, results_dir):
     filename = get_filename_from_token(token = token, results_dir = results_dir)
     return load_json_as_dict(filename)
+
+def stop_everything_gracefully(t):
+    time.sleep(t)
+    os._exit(0)
