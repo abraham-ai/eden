@@ -10,17 +10,14 @@ class BaseBlock(object):
     help host them on a server with multiple GPUs.
 
     Args:
-        max_gpu_load (float, optional): Estimated maximum GPU load that would be required by the job. 0.75 means that it would take up 75% of the load. Defaults to 0.5.
-        max_gpu_mem (float, optional): Estimated maximum GPU memory that would be required by the job. 0.75 means that it would take up 75% of the GPU memory. Defaults to 0.5.
+        progress (bool): set to True if you want to update the progress of your task with `config['__progress__']`
     """
-    def __init__(self, max_gpu_load = 0.5, max_gpu_mem = 0.5):
+    def __init__(self, progress = True):
         
         self.__run__ = None
         self.__setup__ = None
         self.default_args = None
         self.data_model = None
-        self.max_gpu_load = max_gpu_load
-        self.max_gpu_mem = max_gpu_mem
         self.progress = False
 
     def get_progress_bar(self, results_dir, token = None, show_bar = False):
