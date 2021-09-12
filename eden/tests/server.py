@@ -41,11 +41,11 @@ def do_something(config):
         'image': Image(pil_image)    ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
 
-host_block(
-    block = eden_block, 
-    port= 5656,
-    logfile= 'test_eden_logs.log',
-    log_level= 'info',
-    requires_gpu= False,
-    max_num_workers= 2
-)
+# host_block(
+#     block = eden_block, 
+#     port= 5656,
+#     logfile= 'test_eden_logs.log',
+#     log_level= 'info',
+#     requires_gpu= False,
+#     max_num_workers= 2
+# )

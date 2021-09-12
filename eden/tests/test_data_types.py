@@ -39,13 +39,14 @@ class TestDataTypes(unittest.TestCase):
         run_response = c.run(config)
         token = run_response['token']
 
-        sleep_and_count(t = 6)
+        sleep_and_count(t = 7)
 
         resp = c.fetch(token = token)
 
         ## check status 
         ideal_status = {'status': 'complete'}
-        self.assertTrue(resp['status'] == ideal_status)
+        print(resp['status'])
+        self.assertTrue(resp['status'] == ideal_status, msg  = f"got {resp['status']}")
 
         ## save returned image
         resp['config']['input_image'].save(test_filename)
@@ -54,5 +55,4 @@ class TestDataTypes(unittest.TestCase):
         self.assertTrue(PIL.Image.open(test_filename), PIL.Image.open(filename))
 
 if __name__ == '__main__':
-    sleep_and_count(5)
     unittest.main()
