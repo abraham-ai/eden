@@ -6,7 +6,7 @@
 > Ezekiel 28:13
 
 
-Eden is a sandbox for [the Abraham project](http://abraham.ai) to test pipelines for creating generative art with machine learning.
+Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pipelines for creating generative art with machine learning.
 
 
 ## Setting up a block
@@ -26,22 +26,22 @@ eden_block = BaseBlock()
 
 ```python 
 my_args = {
-        'prompt': 'hello world', ## text input
-        'input_image': Image(),  ## for image input
+        'prompt': 'let there be light', ## text
+        'number': 12345,                ## numbers 
+        'input_image': Image()          ## images require eden.datatypes.Image()
     }
 
 @eden_block.run(args = my_args, progress = True)
 def do_something(config): 
 
-    prompt = config['prompt']
     pil_image = config['input_image']
-    device = config['__gpu__']  ## "cuda:0" or something 
-
-    ## Do your stuff here
+    some_number = config['number']
+    device = config.gpu
 
     return {
-        'some_text': 'hello world',  ## returning text (str)
-        'image': Image(pil_image)   ## Image() works on PIL.Image, numpy.array and on jpg an png files
+        'text': 'hello',  ## returning text
+        'number': some_number,       ## returning numbers
+        'image': Image(pil_image)    ## Image() works on PIL.Image, numpy.array and on jpg an png files (str)
     }
 ```
 
@@ -53,7 +53,8 @@ from eden.hosting import host_block
 host_block(
     block = eden_block, 
     port= 5656,
-    max_num_workers= 4 
+    logfile= 'logs.log',  ## set this to None if you dont want one
+    log_level= 'info'
 )
 ```
 
@@ -86,46 +87,7 @@ run_response = c.run(config)
 
 Fetching results/checking task status using the token can be done using `fetch()`. 
 
-* If the task is queued, it returns something like `{'status': 'queued', 'waiting_behind': 9}`
-
-* If the task is in progress (60%), it returns: `{'status': 'running', 'progress': 0.6}`.
-
-* If the task is complete, it returns `{'status': 'complete', 'output': {your_outputs}}`. 
-
 ```python
 results = c.fetch(token = run_response['token'])
 print(results)  
 ```
-
-## Building directly from github repos
-
-To share your pipelines with the world, all that you have to do is to add an `eden.yml` file to the root directory of your github repository. 
-
-The `eden.yml` file specifies how to build and host the block in 2 different sections (`build` and `run`). 
-
-Here's how an `eden.yml` file should look like: 
-
-```yaml
-config:
-    name: Name of your project
-    author: Name of the author
-    
-build:
-    - pip install -r requirements.txt 
-
-run:
-    - python3 eden_server.py
-```
-
-And to build and host the same exact block on another machine, run the following snippet: 
-> It is highly recommended that you run it in a virtual environment. 
-
-```python
-from eden.github import GithubSource
-
-g = GithubSource(url = "https://github.com/username/some_repo.git") ## paste your url here
-
-if __name__ == '__main__':
-    g.build_and_run()
-```
-
