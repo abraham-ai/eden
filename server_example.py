@@ -1,3 +1,4 @@
+import time
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
@@ -14,24 +15,11 @@ def do_something(config):
 
     pil_image = config['input_image']
     some_number = config['number']
-    device = config['__gpu__']
-
-    ## file whose contents get updated when the client calls: Client.update_config()
-    config_filename = config['__filename__']
+    device = config.gpu
 
     for i in range(10):
 
-        ## this is the stuff you need to read the updated config on the fly
-        from eden.utils import load_json_as_dict, parse_for_taking_request
-        new_config = parse_for_taking_request(load_json_as_dict(config_filename))
-
-
-        import logging
-        logging.info(new_config) ### this is just to write it into the logs for debugging
-
-        config['__progress__'].update(1/10)
-
-        import time
+        config.progress.update(1/10)
         time.sleep(1)
 
     return {

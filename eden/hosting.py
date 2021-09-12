@@ -12,7 +12,7 @@ from .datatypes import Image
 from .queue import QueueData
 from .log_utils import Colors
 from .models import Credentials
-from uvicorn.config import LOGGING_CONFIG
+from .config_wrapper import ConfigWrapper
 from .threaded_server import ThreadedServer
 from .log_utils import log_levels, celery_log_levels
 
@@ -27,9 +27,7 @@ from .utils import (
     stop_everything_gracefully
 )
 
-## needed to self terminate script
-import  threading, psutil
-import asyncio
+from uvicorn.config import LOGGING_CONFIG
 
 '''
 Celery+redis is needed to be able to queue tasks
@@ -161,14 +159,25 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
         else:
 
+            """ 
+            refer:
+            https://github.com/abraham-ai/eden/issues/14
+            """
+            args = ConfigWrapper(
+                data = args,
+                filename= get_filename_from_token(token = token, results_dir = results_dir),
+                gpu = None,
+                progress= None
+            )
+
             if requires_gpu == True:
-                args['__gpu__'] = gpu_name
+                args.gpu = gpu_name
 
             if block.progress == True:
                 """
                 if progress was set to True on @eden.BaseBlock.run() decorator, then add a progress tracker into the config
                 """
-                args['__progress__'] = block.get_progress_bar(token= token, results_dir = results_dir)
+                args.progress = block.get_progress_bar(token= token, results_dir = results_dir)
 
             ## Set token as running in eden.queue.QueueData
             queue_data.set_as_running(token = token)
@@ -179,7 +188,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             update_json(dictionary = d, path = filename)
             
             try:
-                args['__filename__'] = filename
+                args.filename = filename
                 output = block.__run__(args)
                 for key, value in output.items():
                     if isinstance(value, Image):

@@ -23,15 +23,13 @@ def do_something(config):
     some_number = config['number']
 
     if REQUIRES_GPU:
-        device = config['__gpu__']
-
-    config_filename = config['__filename__']
+        device = config.gpu
 
     for i in range(5):
 
         ## this is the stuff you need to read the updated config on the fly
-        new_config = parse_for_taking_request(load_json_as_dict(config_filename))
-        config['__progress__'].update(1/5)
+        manually_loaded_config = parse_for_taking_request(load_json_as_dict(config.filename))
+        config.progress.update(1/5)
         time.sleep(1)
 
 
