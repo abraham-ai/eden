@@ -10,7 +10,7 @@ def run_server():
         logfile= None,
         log_level= 'info',
         requires_gpu= False,
-        max_num_workers= 1
+        max_num_workers= 3
     )
 
 def run_server_in_another_thread():

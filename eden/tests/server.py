@@ -27,8 +27,7 @@ def do_something(config):
 
     for i in range(5):
 
-        ## this is the stuff you need to read the updated config on the fly
-        manually_loaded_config = parse_for_taking_request(load_json_as_dict(config.filename))
+        config.refresh()
         config.progress.update(1/5)
         time.sleep(1)
 

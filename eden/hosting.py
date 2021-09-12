@@ -256,39 +256,50 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     def update(credentials: Credentials, config: block.data_model):
         
         token = credentials.token
-        
-        if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
-            """
-            if the task is running or queued, the config gets updated
-            """
-            my_dict = load_json_from_token(token = token, results_dir = results_dir)
+        config = dict(config)
 
-            config = dict(config)
+        status = queue_data.get_status(token = token, results_dir = results_dir)
 
-            for key in list(config.keys()):
-                if key in list(my_dict['config'].keys()):
-                    my_dict[key] = config[key]
+        if status['status'] != 'invalid token':
 
-            filename = get_filename_from_token(token = token, results_dir = results_dir)
-            write_json(dictionary = my_dict, path = filename)
+            if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
 
-            return {
-                'status': 'successfully updated config'
-            }
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
-        elif queue_data.check_if_complete(token = token):
-            return {
-                'status': 'task is aleady complete'
-            }
+                output_dict['config'] = config
+                update_json(dictionary  = output_dict, path = get_filename_from_token(results_dir = results_dir, token = token) )
+                
+                response = {
+                    'status': {
+                        'status': 'successfully updated config',
+                    }
+                }
 
-        
+                return response         
+
+            elif queue_data.check_if_failed(token = token):
+
+                return {
+                    'status': {
+                        'status': 'could not update config because job failed',
+                    }
+                }
+
+            elif queue_data.check_if_complete(token = token):
+
+                return {
+                    'status': {
+                        'status': 'could not update config because job is already complete',
+                    }
+                }
+
         else:
-            """
-            Else it just throws an error
-            """
-            return {
-                'status': 'invalid token'
+            response = {
+                'status': {
+                    'status':'invalid token'
+                    }
             }
+            return response
 
 
     @app.post('/fetch')
