@@ -9,9 +9,9 @@ with open('requirements.txt') as f:
 setuptools.setup(
     name="eden",
     version="0.0.0",
-    author="", 
-    author_email="", 
-    description= "",
+    author="Mayukh Deb, Gene Kogan", 
+    author_email="mayukhmainak2000@gmail.com, kogan.gene@gmail.com", 
+    description= "Convert your python function(s) into a hosted endpoint with minimal changes to your existing code",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/abraham-ai/eden",
@@ -20,13 +20,13 @@ setuptools.setup(
     python_requires='>=3.6',   
     include_package_data=True,
     keywords=[
+        "hosting",
         "machine learning",
         "neural networks",
+        "generative art"
         ],
     classifiers=[
-        "Intended Audience :: Science/Research",
         "Natural Language :: English",
         "Programming Language :: Python :: 3.6",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ] 
 )
