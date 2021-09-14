@@ -24,7 +24,7 @@ class TestUpdateConfig(unittest.TestCase):
 
     def test_update_config(self):
         
-        filename = 'cloud.jpg'
+        filename = 'images/cloud.jpg'
         pil_image = PIL.Image.open(filename)
 
         c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham')

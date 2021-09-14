@@ -24,7 +24,7 @@ class TestDataTypes(unittest.TestCase):
 
     def test_image(self):
         
-        filename = 'cloud.jpg'
+        filename = 'images/cloud.jpg'
         test_filename = 'test_image.jpg'
         pil_image = PIL.Image.open(filename)
 
