@@ -7,6 +7,7 @@ import logging
 import threading
 import traceback
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .datatypes import Image
 from .queue import QueueData
@@ -129,7 +130,15 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
         os.mkdir(results_dir)
 
-    app =  FastAPI()
+    app = FastAPI()
+    origins = ["*"]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @celery_app.task(name = 'run')
     def run(args, filename:str, token:str):        
