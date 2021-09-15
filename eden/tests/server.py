@@ -22,6 +22,8 @@ def do_something(config):
     pil_image = config['input_image']
     some_number = config['number']
 
+    print(f'running job for: {config.token}')
+
     if REQUIRES_GPU:
         device = config.gpu
 

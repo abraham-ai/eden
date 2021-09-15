@@ -175,8 +175,9 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
             args = ConfigWrapper(
                 data = args,
                 filename= get_filename_from_token(token = token, results_dir = results_dir),
-                gpu = None,
-                progress= None
+                gpu = None,  ## will be provided later on in the run
+                progress= None,  ## will be provided later on in the run
+                token = token
             )
 
             if requires_gpu == True:
