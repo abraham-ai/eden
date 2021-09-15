@@ -353,7 +353,8 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
                     'output': output_dict['output'] 
                 }
 
-                response['status']['progress'] = block.progress_tracker.value
+                if block.progress == True:
+                    response['status']['progress'] = block.progress_tracker.value
 
                 return response
 
