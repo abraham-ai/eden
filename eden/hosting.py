@@ -15,7 +15,7 @@ from .log_utils import Colors
 from .models import Credentials
 from .config_wrapper import ConfigWrapper
 from .threaded_server import ThreadedServer
-from .log_utils import log_levels, celery_log_levels
+from .log_utils import log_levels, celery_log_levels, PREFIX
 
 from .utils import (
     parse_for_taking_request, 
@@ -53,7 +53,9 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
+    """
 
+    """
     Response templates: 
     
     /run: 
@@ -100,20 +102,24 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     """
 
     '''
-    watch this celery worker live with:
-    $ celery --broker="redis://localhost:6379" flower --port=6060 
+    Initiating celery app
     '''
     celery_app = Celery(__name__, broker= f"redis://localhost:{str(redis_port)}")
-
     celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://localhost:{str(redis_port)}")
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
+    """
+    Initiating queue data to keep track of the queue
+    """
     queue_data = QueueData()
 
+    """
+    Initiating GPUAllocator only if requires_gpu is True
+    """
     if requires_gpu == True:
         gpu_allocator = GPUAllocator(exclude_gpu_ids= exclude_gpu_ids)
     else:
-         print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initiating server with no GPUs since requires_gpu = False")
+         print(PREFIX + " Initiating server with no GPUs since requires_gpu = False")
         
     if requires_gpu == True:
         if gpu_allocator.num_gpus < max_num_workers:
@@ -127,9 +133,12 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
 
     if not os.path.isdir(results_dir):
-        print("[" + Colors.CYAN+ "EDEN" +Colors.END+ "]", "Folder: '"+ results_dir+ "' does not exist, running mkdir")
+        print(PREFIX, "Folder: '"+ results_dir+ "' does not exist, running mkdir")
         os.mkdir(results_dir)
 
+    """
+    Initiate fastAPI app
+    """
     app = FastAPI()
     origins = ["*"]
     app.add_middleware(
@@ -139,7 +148,10 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    
+    """ 
+    define celery task
+    """
     @celery_app.task(name = 'run')
     def run(args, filename:str, token:str):        
         args = parse_for_taking_request(args)
@@ -314,11 +326,11 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
     @app.post('/fetch')
     def fetch(credentials: Credentials):
+        """        
+        Returns either the status of the task or the result depending on whether it's queued, running, complete or failed.
 
-        """all that I have to do is edit this function mostly hehe 
-
-        Returns:
-            [type]: [description]
+        Args:
+            credentials (Credentials): should contain a token that points to a task
         """
 
         token = credentials.token
@@ -409,10 +421,10 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
     # context starts fastAPI stuff and run_celery_app starts celery
     with server.run_in_thread():
-        message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
+        message = PREFIX + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
         run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile)
 
-    message = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]" + " Stopped"
+    message = PREFIX + " Stopped"
     print(message)

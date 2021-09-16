@@ -13,5 +13,7 @@ log_levels = [
     'trace'
 ]
 
+PREFIX = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "]"
+
 celery_log_levels = {}
 for level in log_levels: celery_log_levels[level] = level.upper()
