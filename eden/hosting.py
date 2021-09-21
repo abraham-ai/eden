@@ -416,7 +416,7 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(asctime)s %(message)s"
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] %(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s"
 
-    config = uvicorn.config.Config(app = app, port=port, log_level= log_level)
+    config = uvicorn.config.Config(app = app, host="0.0.0.0", port=port, log_level= log_level)
     server = ThreadedServer(config = config)
 
     # context starts fastAPI stuff and run_celery_app starts celery
