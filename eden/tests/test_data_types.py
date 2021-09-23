@@ -39,7 +39,7 @@ class TestDataTypes(unittest.TestCase):
         run_response = c.run(config)
         token = run_response['token']
 
-        sleep_and_count(t = 7)
+        sleep_and_count(t = 8)
 
         resp = c.fetch(token = token)
 
