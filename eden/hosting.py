@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .datatypes import Image
 from .queue import QueueData
 from .log_utils import Colors
-from .models import Credentials
+from .models import Credentials, WaitFor
 from .config_wrapper import ConfigWrapper
 from .threaded_server import ThreadedServer
 from .log_utils import log_levels, celery_log_levels, PREFIX
@@ -401,15 +401,15 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
         
 
     @app.post("/stop")
-    async def stop(config:dict):
+    async def stop(wait_for: WaitFor):
         """
         Stops the eden block, and exits the script
 
         Args:
             config (dict, optional): Amount of time in seconds before the server shuts down. Defaults to {'time': 0}.
         """
-        logging.info(f'Stopping gracefully in {config["time_to_wait"]} seconds')
-        stop_everything_gracefully(t = config['time_to_wait'])
+        logging.info(f'Stopping gracefully in {wait_for.seconds} seconds')
+        stop_everything_gracefully(t = wait_for.seconds)
         
 
     ## overriding the boring old [INFO] thingy
