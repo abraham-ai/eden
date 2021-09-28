@@ -41,7 +41,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', logfile = 'eden_logs.log', exclude_gpu_ids: list = []):
+def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -109,11 +109,6 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
 
     """
-    Initiating queue data to keep track of the queue
-    """
-    queue_data = QueueData()
-
-    """
     Initiating GPUAllocator only if requires_gpu is True
     """
     if requires_gpu == True:
@@ -133,8 +128,13 @@ def host_block(block,  port = 8080, results_dir = 'results', max_num_workers = 4
 
 
     if not os.path.isdir(results_dir):
-        print(PREFIX, "Folder: '"+ results_dir+ "' does not exist, running mkdir")
-        os.mkdir(results_dir)
+        print(PREFIX, "Folder: '"+ results_dir + "' does not exist, running mkdir")
+        os.makedirs(results_dir)
+
+    """
+    Initiating queue data to keep track of the queue
+    """
+    queue_data = QueueData(filename = queue_data_filename)
 
     """
     Initiate fastAPI app
