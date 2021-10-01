@@ -7,6 +7,7 @@ import logging
 import threading
 import traceback
 from fastapi import FastAPI
+from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.middleware.cors import CORSMiddleware
 
 from .datatypes import Image
@@ -148,7 +149,9 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+    app.add_middleware(PrometheusMiddleware)
+    app.add_route("/metrics", handle_metrics)
+
     """ 
     define celery task
     """
