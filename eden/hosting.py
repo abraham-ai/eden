@@ -41,7 +41,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
+def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -50,7 +50,8 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
         results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
         max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
-        redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
+        redis_port (int, optional): Port number for celery's redis server. Defaults to 6379.
+        redis_host (str, optional): Place to host redis for `eden.queue.QueueData`. Defaults to localhost.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
     """
@@ -104,9 +105,9 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     '''
     Initiating celery app
     '''
-    celery_app = Celery(__name__, broker= f"redis://localhost:{str(redis_port)}")
-    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://localhost:{str(redis_port)}")
-    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
+    celery_app = Celery(__name__, broker= f"redis://{redis_host}:{str(redis_port)}")
+    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://{redis_host}:{str(redis_port)}")
+    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://{redis_host}:{str(redis_port)}")
     celery_app.conf.task_track_started = os.environ.get("CELERY_TRACK_STARTED", default = True)
 
     celery_app.conf.worker_send_task_events = True
