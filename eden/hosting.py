@@ -20,12 +20,12 @@ from .log_utils import log_levels, celery_log_levels, PREFIX
 from .utils import (
     parse_for_taking_request, 
     write_json, 
-    update_json,
-    make_filename_and_token, 
+    update_json, 
     get_filename_from_token, 
     load_json_as_dict,
     load_json_from_token,
-    stop_everything_gracefully
+    stop_everything_gracefully,
+    generate_random_string
 )
 
 from uvicorn.config import LOGGING_CONFIG
@@ -108,6 +108,9 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://localhost:{str(redis_port)}")
     celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
     celery_app.conf.task_track_started = os.environ.get("CELERY_TRACK_STARTED", default = True)
+
+    celery_app.conf.worker_send_task_events = True
+    celery_app.conf.task_send_sent_event = True
     """
     Initiating GPUAllocator only if requires_gpu is True
     """
@@ -134,7 +137,12 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     """
     Initiating queue data to keep track of the queue
     """
-    queue_data = QueueData(filename = queue_data_filename)
+    queue_data = QueueData(
+        celery_app = celery_app,
+        redis_port= redis_port,
+        redis_host = 'localhost',
+        filename = queue_data_filename
+    )
 
     """
     Initiate fastAPI app
@@ -175,8 +183,6 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
             }
-            # queue_data.set_as_running(token = token)
-            # queue_data.set_as_failed(token = token)
 
         else:
 
@@ -186,7 +192,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             """
             args = ConfigWrapper(
                 data = args,
-                filename= get_filename_from_token(token = token, results_dir = results_dir),
+                filename= filename,
                 gpu = None,  ## will be provided later on in the run
                 progress= None,  ## will be provided later on in the run
                 token = token
@@ -228,8 +234,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                 d['error'] = e
                 update_json(dictionary = d, path = filename)
                 
-                ## set task as failed in QueueData
-                queue_data.set_as_failed(token = token)
+                # queue_data.set_as_failed(token = token)
                 traceback.print_exc()
 
                 if requires_gpu == True:
@@ -241,8 +246,6 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     @app.post('/run')
     def start_run(config: block.data_model):
         
-        filename, token = make_filename_and_token(results_dir = results_dir, username = config.username)
-
         config = dict(config)        
         '''
         write initial results file with config
@@ -253,17 +256,20 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             'output': {}
         }
 
+        '''
+        refer:
+            https://github.com/celery/celery/issues/1813#issuecomment-33142648
+        '''
+        token = generate_random_string(len = 10)
+
+        filename = get_filename_from_token(results_dir = results_dir, token = token)
+
+        kwargs = dict(args = config, filename = filename, token = token)
+        res = run.apply_async(kwargs = kwargs, task_id = token)
+
         write_json(dictionary = initial_dict, path = filename)
         
-        queue_data.add_to_queue(
-            token = token, 
-            res = run.delay(args = config, filename = filename, token = token)
-        )
-
-        status = queue_data.get_status(token = token)
-        
         response = {
-            'status': status,
             'token': token
         }
 
@@ -358,8 +364,11 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                 }
 
             else:
+                output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
                 response = {
-                    'status': status
+                    'status': status,
+                    'config': output_dict['config']
                 }
 
         else:
@@ -398,10 +407,5 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile)
 
     message = PREFIX + " Stopped"
-
-    p = []
-    for res in QUEUE_DATA.values():
-        p.append(res.status)
-    print(p)
 
     print(message)

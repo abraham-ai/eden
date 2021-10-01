@@ -60,8 +60,8 @@ class TestSchemas(unittest.TestCase):
         }
         """
         ideal_keys = ['token']
-        # keys_we_got = get_keys(d = run_response)
-        # self.assertTrue(ideal_keys, keys_we_got)
+        keys_we_got = get_keys(d = run_response)
+        self.assertTrue(ideal_keys, keys_we_got)
 
         token = run_response['token']
 
