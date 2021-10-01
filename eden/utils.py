@@ -71,12 +71,6 @@ def update_json(dictionary: dict, path:str):
         data[key] = value
     write_json(data, path)
 
-def make_filename_and_token(results_dir, username):
-    id = make_id(username)
-    filename = results_dir + "/" + id + '.json'
-    # print("filename:  ", filename)
-    return filename, id
-
 def generate_random_string(len):
     x = ''.join(secrets.choice(string.ascii_lowercase + string.digits) for i in range(len))
     return x

@@ -21,12 +21,12 @@ from .log_utils import log_levels, celery_log_levels, PREFIX
 from .utils import (
     parse_for_taking_request, 
     write_json, 
-    update_json,
-    make_filename_and_token, 
+    update_json, 
     get_filename_from_token, 
     load_json_as_dict,
     load_json_from_token,
-    stop_everything_gracefully
+    stop_everything_gracefully,
+    generate_random_string
 )
 
 from uvicorn.config import LOGGING_CONFIG
@@ -42,7 +42,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_workers = 4, redis_port = 6379, requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
+def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -51,7 +51,8 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
         results_dir (str, optional): Folder where the results would be stored. Defaults to 'results'.
         max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
-        redis_port (int, optional): Port number for celery's redis server. Make sure you use a non default value when hosting multiple blocks from a single machine. Defaults to 6379.
+        redis_port (int, optional): Port number for celery's redis server. Defaults to 6379.
+        redis_host (str, optional): Place to host redis for `eden.queue.QueueData`. Defaults to localhost.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
     """
@@ -105,10 +106,13 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     '''
     Initiating celery app
     '''
-    celery_app = Celery(__name__, broker= f"redis://localhost:{str(redis_port)}")
-    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://localhost:{str(redis_port)}")
-    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://localhost:{str(redis_port)}")
+    celery_app = Celery(__name__, broker= f"redis://{redis_host}:{str(redis_port)}")
+    celery_app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://{redis_host}:{str(redis_port)}")
+    celery_app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", f"redis://{redis_host}:{str(redis_port)}")
+    celery_app.conf.task_track_started = os.environ.get("CELERY_TRACK_STARTED", default = True)
 
+    celery_app.conf.worker_send_task_events = True
+    celery_app.conf.task_send_sent_event = True
     """
     Initiating GPUAllocator only if requires_gpu is True
     """
@@ -135,7 +139,12 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     """
     Initiating queue data to keep track of the queue
     """
-    queue_data = QueueData(filename = queue_data_filename)
+    queue_data = QueueData(
+        celery_app = celery_app,
+        redis_port= redis_port,
+        redis_host = 'localhost',
+        filename = queue_data_filename
+    )
 
     """
     Initiate fastAPI app
@@ -178,8 +187,6 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
             }
-            queue_data.set_as_running(token = token)
-            queue_data.set_as_failed(token = token)
 
         else:
 
@@ -189,7 +196,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             """
             args = ConfigWrapper(
                 data = args,
-                filename= get_filename_from_token(token = token, results_dir = results_dir),
+                filename= filename,
                 gpu = None,  ## will be provided later on in the run
                 progress= None,  ## will be provided later on in the run
                 token = token
@@ -204,13 +211,8 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                 """
                 args.progress = block.get_progress_bar(token= token, results_dir = results_dir)
 
-            ## Set token as running in eden.queue.QueueData
+            
             queue_data.set_as_running(token = token)
-
-            ## Set token as running in {results_dir}/{token}.json
-            d = load_json_from_token(token = token, results_dir = results_dir)
-            d['status'] = {'status': 'running'}
-            update_json(dictionary = d, path = filename)
             
             try:
                 args.filename = filename
@@ -221,9 +223,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
 
                 d = load_json_from_token(token = token, results_dir = results_dir)
                 d['output'] = output
-                d['status'] = {'status': 'complete'}
                 update_json(dictionary = d, path = filename)
-                queue_data.set_as_complete(token = token)
 
                 if requires_gpu == True:
                     gpu_allocator.set_as_free(name = gpu_name)
@@ -238,8 +238,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                 d['error'] = e
                 update_json(dictionary = d, path = filename)
                 
-                ## set task as failed in QueueData
-                queue_data.set_as_failed(token = token)
+                # queue_data.set_as_failed(token = token)
                 traceback.print_exc()
 
                 if requires_gpu == True:
@@ -251,8 +250,6 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     @app.post('/run')
     def start_run(config: block.data_model):
         
-        filename, token = make_filename_and_token(results_dir = results_dir, username = config.username)
-
         config = dict(config)        
         '''
         write initial results file with config
@@ -263,15 +260,20 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
             'output': {}
         }
 
+        '''
+        refer:
+            https://github.com/celery/celery/issues/1813#issuecomment-33142648
+        '''
+        token = generate_random_string(len = 10)
+
+        filename = get_filename_from_token(results_dir = results_dir, token = token)
+
+        kwargs = dict(args = config, filename = filename, token = token)
+        res = run.apply_async(kwargs = kwargs, task_id = token)
+
         write_json(dictionary = initial_dict, path = filename)
-
-        queue_data.join_queue(token = token, config = config)
-
-        run.delay(args = config, filename = filename, token = token)
-        status = queue_data.get_status(token = token, results_dir = results_dir)
         
         response = {
-            'status': status,
             'token': token
         }
 
@@ -283,11 +285,11 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         token = credentials.token
         config = dict(config)
 
-        status = queue_data.get_status(token = token, results_dir = results_dir)
+        status = queue_data.get_status(token = token)
 
         if status['status'] != 'invalid token':
 
-            if queue_data.check_if_queued(token = token) or queue_data.check_if_running(token = token):
+            if status['status'] == 'queued' or status['status'] == 'running':
 
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
@@ -302,7 +304,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
 
                 return response         
 
-            elif queue_data.check_if_failed(token = token):
+            elif status['status'] == 'failed':
 
                 return {
                     'status': {
@@ -310,7 +312,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                     }
                 }
 
-            elif queue_data.check_if_complete(token = token):
+            elif status['status'] == 'complete':
 
                 return {
                     'status': {
@@ -338,29 +340,13 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
 
         token = credentials.token
 
-        status = queue_data.get_status(token = token, results_dir = results_dir)
+        status = queue_data.get_status(token = token)
 
         if status['status'] != 'invalid token':
 
-            if queue_data.check_if_queued(token = token):
+            if status['status'] == 'running': 
 
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
-
-                response = {
-                    'status': status,
-                    'config': output_dict['config'] ,
-                }
-
-                return response
-
-            elif queue_data.check_if_running(token = token):
-
-                try:
-                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
-                except json.decoder.JSONDecodeError:
-                    import time 
-                    time.sleep(1e-3)
-                    output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
                 response = {
                     'status': status,
@@ -371,36 +357,31 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
                 if block.progress == True:
                     response['status']['progress'] = block.progress_tracker.value
 
-                return response
-
-            elif queue_data.check_if_failed(token = token):
+            elif status['status'] == 'complete': 
 
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
+
                 response = {
-                    'status': {'status': 'failed'},
-                    'config': output_dict['config'] ,
+                    'status': status,
+                    'config': output_dict['config'] ,  ## uncomment this if gene ever wants you to return config even after the run is complete
                     'output': output_dict['output'] 
                 }
 
-                return response
-
-            elif queue_data.check_if_complete(token = token):
-
+            else:
                 output_dict = load_json_from_token(token = token, results_dir = results_dir)
 
-                output_dict['status']= {'status': 'complete'}
-
-                return output_dict
+                response = {
+                    'status': status,
+                    'config': output_dict['config']
+                }
 
         else:
             response = {
-                'status': {
-                    'status':'invalid token'
-                    }
+                'status': status
             }
-            return response
 
-        
+
+        return response
         
 
     @app.post("/stop")
@@ -430,4 +411,5 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
         run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile)
 
     message = PREFIX + " Stopped"
+
     print(message)
