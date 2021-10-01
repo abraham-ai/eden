@@ -142,7 +142,7 @@ def host_block(block,  port = 8080, results_dir = '.eden/results', max_num_worke
     queue_data = QueueData(
         celery_app = celery_app,
         redis_port= redis_port,
-        redis_host = 'localhost',
+        redis_host = redis_host,
         filename = queue_data_filename
     )
 
