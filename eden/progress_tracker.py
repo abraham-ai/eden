@@ -1,24 +1,22 @@
 from tqdm import tqdm 
-from .utils import (
-    get_filename_from_token, 
-    load_json_from_token,
-    write_json
-)
-
+from .result_storage import ResultStorage
 
 class ProgressTracker():
-    def __init__(self, results_dir, token = None):
+    def __init__(self, token: str, result_storage: ResultStorage):
         self.value = 0.0
         self.token = token
-        self.results_dir = results_dir
-        self.filename = get_filename_from_token(token = token, results_dir = self.results_dir)
+        self.result_storage = result_storage
 
     def update(self, n):
 
         self.value += n
 
-        d = load_json_from_token(token = self.token, results_dir = self.results_dir)
+        output_from_storage = self.result_storage.get(token = self.token)
+        output_from_storage['progress'] = self.value  
 
-        d['status']['progress'] = self.value
+        success = self.result_storage.add(
+            encoded_results = output_from_storage,
+            token = self.token
+        )
 
-        write_json(dictionary = d, path = self.filename)
+        return success
