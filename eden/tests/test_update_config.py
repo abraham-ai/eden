@@ -27,7 +27,7 @@ class TestUpdateConfig(unittest.TestCase):
         filename = 'images/cloud.jpg'
         pil_image = PIL.Image.open(filename)
 
-        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham')
+        c = Client(url = 'http://0.0.0.0:5656', username= 'test_abraham')
 
         config = {
             'prompt': 'let there be tests',
@@ -62,6 +62,7 @@ class TestUpdateConfig(unittest.TestCase):
             'number': 3322,
             'input_image': pil_image  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
+        print(resp)
         self.assertTrue(resp['config'], ideal_config)
 
 

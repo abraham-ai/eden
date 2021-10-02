@@ -1,7 +1,6 @@
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
-from eden.utils import load_json_as_dict, parse_for_taking_request
 from eden.hosting import host_block
 import time 
 
