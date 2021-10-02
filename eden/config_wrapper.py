@@ -1,6 +1,5 @@
 from .progress_tracker import ProgressTracker
-
-from .utils import load_json_as_dict, parse_for_taking_request
+from .data_handlers import Encoder, Decoder
 
 class ConfigWrapper(object):
     """
@@ -17,13 +16,16 @@ class ConfigWrapper(object):
         progress (ProgressTracker, optional): If provided, can be used to update the progress of the job. Defaults to None.
         token (str, optional): Unique identifier behind each task run. Defaults to None.
     """
-    def __init__(self, data: dict, filename: str, gpu: str, progress: ProgressTracker = None, token :str = None):
+    def __init__(self, data: dict, gpu: str, progress: ProgressTracker = None, token :str = None, result_storage = None):
         
         self.data = data
-        self.filename = filename
         self.gpu = gpu
         self.progress = progress
         self.token = token
+
+        self.decoder = Decoder()
+        self.result_storage = result_storage
+        
         self.__key_to_look_for_in_json_file__ = 'config'
 
     def __getitem__(self, idx):
@@ -43,7 +45,8 @@ class ConfigWrapper(object):
         """
         something_changed = False
 
-        d = parse_for_taking_request(load_json_as_dict(filename= self.filename))
+        d = self.decoder.decode(self.result_storage.get(self.token))
+
         data = d[self.__key_to_look_for_in_json_file__]
         
         if data != self.data:
