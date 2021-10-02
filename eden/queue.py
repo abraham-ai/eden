@@ -3,14 +3,11 @@ import time
 import json
 from .log_utils import Colors
 import warnings
-from .utils import write_json, load_json_as_dict, get_filename_from_token
 
 '''
 redis stuff so that different eden replicas can stay in sync
 '''
 from redis import Redis
-
-
 
 class QueueData(object):
     """
@@ -19,7 +16,7 @@ class QueueData(object):
     Args:
         filename (str): name of the json file where the data is stored. Defaults to: "__eden_queue__.json"
     """
-    def __init__(self, celery_app, redis_port: int,  redis_host: str , filename: str = '__eden_queue__.json'):
+    def __init__(self, celery_app, redis_port: int,  redis_host: str , filename: str = '__eden_queue__.json', db = 0):
 
         '''
         to wipe all redis stuff, use:
@@ -31,6 +28,7 @@ class QueueData(object):
         self.redis = Redis(
             host= redis_host,
             port= str(redis_port),
+            db = db
         )
 
         # self.pipeline = self.redis.pipeline()
@@ -71,6 +69,22 @@ class QueueData(object):
         else:
             return False
 
+    def get_from_redis(self, token):
+        full_token = 'celery-task-meta-' + token
+        response_bytes = self.redis.get(full_token)  ##.execute()[0]
+        return response_bytes
+
+    def decode_response_bytes(self, response_bytes): 
+        dict_str = response_bytes.decode("UTF-8")
+        dict_from_str = json.loads(dict_str)
+        return dict_from_str
+
+    def get_results(self, token): 
+
+        response_bytes = self.get_from_redis(token = token)
+        result = self.decode_response_bytes(response_bytes = response_bytes)['result']
+        return result
+
     def get_status(self, token):
 
         '''
@@ -102,15 +116,11 @@ class QueueData(object):
             these can be found on the redis keys
             '''
 
-            full_token = 'celery-task-meta-' + token
-            response_bytes = self.redis.get(full_token)  ##.execute()[0]
+            response_bytes = self.get_from_redis(token = token)
 
             if response_bytes is not None:
 
-                dict_str = response_bytes.decode("UTF-8")
-
-                ## convert to dict and extract status
-                status = json.loads(dict_str)['status']
+                status = self.decode_response_bytes(response_bytes = response_bytes)['status']
                 status = self.name_mapping[status]
 
                 status_to_return = {
@@ -129,15 +139,6 @@ class QueueData(object):
     def __getitem__(self, token):
         return self.get_status(token = token)
 
-    def add_to_queue(self, token, res):
-        
-        self.queue.append(token)
-        
-    def set_as_running(self, token):
-        try:
-            self.queue.remove(token)
-        except:
-            pass
 
     def get_queue_position(self, token):
         try:
