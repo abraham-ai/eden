@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from .utils import parse_for_sending_request, parse_response_after_run
+from .data_handlers import Encoder, Decoder
 
 class Client(object):
     """
@@ -19,6 +19,8 @@ class Client(object):
         self.url = url 
         self.timeout = timeout
         self.verify_ssl = verify_ssl
+        self.encoder = Encoder()
+        self.decoder = Decoder()
 
     def run(self, config):
         """
@@ -40,7 +42,8 @@ class Client(object):
             dict: {'status': 'running' or 'queued', 'token': some_long_string}
         """
         config['username'] = self.username
-        config = parse_for_sending_request(config= config)
+        config = self.encoder.encode(data = config)
+        
         resp = requests.post(self.url + '/run', json=config, timeout = self.timeout, verify = self.verify_ssl)
 
         try:
@@ -48,38 +51,33 @@ class Client(object):
         except json.decoder.JSONDecodeError:
             raise Exception('got invalid response from host: \n', str(resp))
             
-        try:
-            resp = parse_response_after_run(resp)
-            return resp
-        except KeyError:
-            return resp
+        resp = self.decoder.decode(resp)
+        return resp
+        
 
 
     def fetch(self, token):
         """
-        Tries to fetch results from the host. Returns the output if the task is complete, else returns the queue status.
-
-        Args:
-            token (str): token you received after running `some_client.run()`
-
-        Raises:
-            json.decoder.JSONDecodeError: If an invalid json is returned which cannot be decoded.
-
-        Returns:
-            dict: either {'status': 'complete' 'output': {your_outputs}} or {'status': 'queued', 'waiting_behind': (some int)} or {'status': 'running'}
-        
+        Tries to fetch results from the host. 
+        Returns the output if the task is complete, 
+        else returns the queue status.        
         """
         config = {
             'token': token
         }
         resp = requests.post(self.url + '/fetch', timeout = self.timeout, json = config, verify = self.verify_ssl)
-
         try:
             resp = resp.json()
         except json.decoder.JSONDecodeError:
             raise Exception('got invalid response from host: \n', str(resp))
+
+        resp_keys = list(resp.keys())
+
+        if 'output' in resp_keys:
+            resp['output'] = self.decoder.decode(resp['output'])
+        if 'config' in resp_keys:
+            resp['config'] = self.decoder.decode(resp['config'])
             
-        resp = parse_response_after_run(resp)
         return resp
 
 
@@ -101,7 +99,7 @@ class Client(object):
             dict: either {'status': 'complete' 'output': {your_outputs}} or {'status': 'queued', 'waiting_behind': (some int)} or {'status': 'running'}
         """
 
-        config = parse_for_sending_request(config= config)
+        config = self.encoder.encode(data = config)
 
         config = {
             'credentials':{
@@ -117,7 +115,7 @@ class Client(object):
         except json.decoder.JSONDecodeError:
             raise Exception('got invalid response from host: \n', str(resp))
             
-        resp = parse_response_after_run(resp)
+        resp = self.decoder.decode(resp)
         return resp
 
 

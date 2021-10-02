@@ -20,8 +20,8 @@ class BaseBlock(object):
         self.data_model = None
         self.progress = False
 
-    def get_progress_bar(self, results_dir, token = None, show_bar = False):
-        self.progress_tracker = ProgressTracker(token = token, results_dir = results_dir)
+    def get_progress_bar(self, token: str, result_storage):
+        self.progress_tracker = ProgressTracker(token = token, result_storage = result_storage)
         return self.progress_tracker
 
     def create_default_data_fields(self):
@@ -35,7 +35,7 @@ class BaseBlock(object):
 
         for key, value in self.default_args.items():
             if isinstance(value, Image):
-                self.default_args[key] = value.__call__()
+                self.default_args[key] = value.encode()
     
     def build_pydantic_model(self):
         """
