@@ -61,6 +61,11 @@ class QueueData(object):
 
         return  tokens_in_queue
 
+    def get_queue_length(self): 
+        tokens_in_queue = self.get_queue()
+        assert isinstance(tokens_in_queue, list)
+        return len(tokens_in_queue)
+
     def check_if_token_in_queue(self, token):
         tokens_in_queue = self.get_queue()
 

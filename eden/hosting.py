@@ -7,6 +7,7 @@ import logging
 import threading
 import traceback
 from fastapi import FastAPI
+from prometheus_client import Gauge
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -170,12 +171,21 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
         redis_port= redis_port
     )
 
+    """
+    initiate queue gauge for prometheus, 
+    it tells prometheus how many jobs are currently queued
+    """
+    queue_gauge = Gauge('num_queued_jobs', 'number of jobs in the queue')
+
     """ 
     define celery task
     """
     @celery_app.task(name = 'run')
     def run(args, token:str):  
 
+        ## update queue gauge for prometheus
+        queue_gauge.set(queue_data.get_queue_length())  
+        
         args = data_decoder.decode(args)
         '''
         allocating a GPU ID to the tast based on usage
@@ -240,6 +250,9 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
 
     @app.post('/run')
     def start_run(config: block.data_model):
+
+        ## update queue gauge for prometheus
+        queue_gauge.set(queue_data.get_queue_length())  
 
         '''
         refer:
