@@ -20,3 +20,7 @@ class ProgressTracker():
         )
 
         return success
+
+def fetch_progress_from_token(result_storage: ResultStorage, token: str):
+    progress_value = result_storage.get(token = token)['progress']
+    return progress_value

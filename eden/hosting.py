@@ -16,6 +16,7 @@ from .log_utils import Colors
 from .models import Credentials, WaitFor
 from .config_wrapper import ConfigWrapper
 from .threaded_server import ThreadedServer
+from .progress_tracker import fetch_progress_from_token
 from .log_utils import log_levels, celery_log_levels, PREFIX
 
 from .utils import (
@@ -342,7 +343,11 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 }
 
                 if block.progress == True:
-                    response['status']['progress'] = block.progress_tracker.value
+                    progress_value = fetch_progress_from_token(
+                        result_storage = result_storage,
+                        token = token
+                    )
+                    response['status']['progress'] = progress_value
 
             elif status['status'] == 'complete': 
 
