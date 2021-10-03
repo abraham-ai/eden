@@ -111,6 +111,11 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     celery_app.conf.task_send_sent_event = True
 
     """
+    set prefetch mult to 1 so that tasks dont get pre-fetched by workers 
+    """
+    celery_app.conf.worker_prefetch_multiplier = 1
+
+    """
     Initiating GPUAllocator only if requires_gpu is True
     """
     if requires_gpu == True:

@@ -49,22 +49,20 @@ class QueueData(object):
     def get_queue(self):
         tokens_in_queue = []
 
-        queue_stuff = self.redis.hgetall('unacked')
+        queue_stuff = self.redis.lrange('celery', 0 , -1)
+        
         if queue_stuff is not None:
-
-            keys= queue_stuff.keys()
-            for k in keys: 
-
-                token_standing_in_queue = json.loads(queue_stuff[k].decode('utf-8'))[0]['headers']['root_id']
-                
+            
+            for stuff in queue_stuff: 
+                stuff = self.decode_response_bytes(stuff)
+                token_standing_in_queue = stuff['headers']['id']
                 tokens_in_queue.append(token_standing_in_queue)
 
         return  tokens_in_queue
 
     def get_queue_length(self): 
-        tokens_in_queue = self.get_queue()
-        assert isinstance(tokens_in_queue, list)
-        return len(tokens_in_queue)
+        length = self.redis.llen('celery')
+        return length
 
     def check_if_token_in_queue(self, token):
         tokens_in_queue = self.get_queue()
@@ -147,7 +145,8 @@ class QueueData(object):
 
     def get_queue_position(self, token):
         try:
-            pos = self.get_queue().index(token)
+            all_tokens = self.get_queue()
+            pos = len(all_tokens) - all_tokens.index(token) - 1  ## reversing the index
         except:
             pos = None
             raise Exception(f'token: {token} not found in {self.get_queue()}')
