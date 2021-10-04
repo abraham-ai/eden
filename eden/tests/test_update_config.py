@@ -38,7 +38,7 @@ class TestUpdateConfig(unittest.TestCase):
         run_response = c.run(config)
         token = run_response['token']
 
-        sleep_and_count(t = 1)
+        sleep_and_count(t = 2)
 
         new_config = {
             'prompt': 'updated prompt',
@@ -53,8 +53,12 @@ class TestUpdateConfig(unittest.TestCase):
 
         ## checking if the task is still running
         resp = c.fetch(token = token)
-        ideal_status = {'status': 'running'}
-        self.assertTrue(resp['status'], ideal_status)
+        ideal_status_running = 'running'
+        ideal_status_starting = 'starting'
+        print(resp['status'])
+        self.assertTrue(
+            (resp['status']['status'] == ideal_status_running) or (resp['status']['status'] == ideal_status_starting)
+        )
 
         ## making sure the update config is what its supposed to be
         ideal_config = {

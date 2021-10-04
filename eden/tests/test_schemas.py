@@ -88,11 +88,12 @@ class TestSchemas(unittest.TestCase):
         keys_we_got = get_keys(d = resp)
         self.assertTrue(ideal_keys, keys_we_got)
 
-        ideal_keys = ['status', 'queue_position']
-        keys_we_got = get_keys(d = resp['status'])
+        ideal_keys= ['status', 'config']
 
-        self.assertTrue(ideal_keys == keys_we_got)
-        self.assertTrue(resp['status']['status'] == 'queued')
+        if resp['status']['status'] == 'starting' or resp['status']['status'] == 'queued':
+            self.assertTrue(
+                ideal_keys == keys_we_got
+            )
 
         ## waiting for the job to start running
         while True:
@@ -102,7 +103,7 @@ class TestSchemas(unittest.TestCase):
                 t = 1,
                 reason= 'waiting for the job to start running... '
             )
-            if resp['status']['status'] != 'queued':
+            if resp['status']['status'] != 'queued' and resp['status']['status'] != 'starting':
                 break
         """ 
         expected:
@@ -118,6 +119,7 @@ class TestSchemas(unittest.TestCase):
         """
         resp = c.fetch(token = new_token)
         ideal_status = 'running'
+        print(resp['status']['status'])
         self.assertTrue(resp['status']['status'] == ideal_status)
         self.assertTrue(isinstance(resp['output'], dict))
         self.assertTrue(isinstance(resp['status']['progress'], float))
