@@ -292,7 +292,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
 
         if status['status'] != 'invalid token':
 
-            if status['status'] == 'queued' or status['status'] == 'running':
+            if status['status'] == 'queued' or status['status'] == 'running' or status['status'] == 'starting':
 
                 output_from_storage = result_storage.get(token = token)
                 output_from_storage['config'] = config  
@@ -332,7 +332,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                     'status':'invalid token'
                     }
             }
-            return response
+        return response
 
 
     @app.post('/fetch')
@@ -377,19 +377,17 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                     'output': results['output']
                 }
 
-            elif status['status'] == 'queued':
+            elif status['status'] == 'queued' or status['status'] == 'starting' or status['status'] == 'failed':
 
+                results = result_storage.get(token = token)
+                
                 response = {
                     'status': status,
-                }
-
-            elif status['status'] == 'failed':
-
-                response = {
-                    'status': status,
+                    'config': results['config']
                 }
 
         else:
+
             response = {
                 'status': status  ## invalid token
             }

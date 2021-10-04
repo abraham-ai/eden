@@ -88,6 +88,25 @@ class QueueData(object):
         result = self.decode_response_bytes(response_bytes = response_bytes)['result']
         return result
 
+    def check_if_token_in_unacked(self, token):
+        tokens_in_unacked = []
+
+        unacked_stuff = self.redis.hgetall('unacked')
+
+        if unacked_stuff is not None:
+
+            keys= unacked_stuff.keys()
+            for k in keys: 
+
+                token_standing_in_queue = json.loads(unacked_stuff[k].decode('utf-8'))[0]['headers']['root_id']
+                
+                tokens_in_unacked.append(token_standing_in_queue)
+
+        if token in tokens_in_unacked:
+            return True
+        else: 
+            return False
+
     def get_status(self, token):
 
         '''
@@ -130,11 +149,19 @@ class QueueData(object):
                     'status': status,
                 }
 
-            else:
+            elif self.check_if_token_in_unacked(token = token):
+                '''
+                check if job is in key 'unacked'
+                'unacked' generally stores the jobs which are just about to start
+                '''
 
                 status_to_return = {
+                    'status': 'starting',
+                }
+
+            else:
+                status_to_return = {
                     'status': 'invalid token',
-                    # 'in queue': in_queue
                 }
 
         return status_to_return
