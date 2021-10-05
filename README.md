@@ -6,7 +6,7 @@
 > Ezekiel 28:13
 
 
-Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pipelines for creating generative art with machine learning.
+Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pretty much any python function as a hosted endpoint.
 
 
 ## Setting up a block
@@ -36,10 +36,9 @@ def do_something(config):
 
     pil_image = config['input_image']
     some_number = config['number']
-    device = config.gpu
 
     return {
-        'text': 'hello',  ## returning text
+        'text': 'hello world',  ## returning text
         'number': some_number,       ## returning numbers
         'image': Image(pil_image)    ## Image() works on PIL.Image, numpy.array and on jpg an png files (str)
     }
@@ -53,8 +52,9 @@ from eden.hosting import host_block
 host_block(
     block = eden_block, 
     port= 5656,
-    logfile= 'logs.log',  ## set this to None if you dont want one
-    log_level= 'info'
+    logfile= 'logs.log',
+    log_level= 'info',
+    max_num_workers = 5
 )
 ```
 
@@ -79,7 +79,7 @@ After you start a task with `run()` as shown below, it returns a token as `run_r
 config = {
     'prompt': 'let there be light',
     'number': 2233,
-    'input_image': Image('test_images/krusty_krab.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
+    'input_image': Image('your_image.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
 }
 
 run_response = c.run(config)
