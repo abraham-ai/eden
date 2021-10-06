@@ -1,5 +1,6 @@
 from eden.block import BaseBlock
 from eden.datatypes import Image
+from eden.hosting import host_block
 
 ## eden <3 pytorch
 from torchvision import models, transforms 
@@ -16,9 +17,9 @@ my_transforms = transforms.Compose([
 eden_block = BaseBlock()
 
 my_args = {
-        'width': 224,               ## width
-        'height': 224,              ## height
-        'input_image': Image()      ## images require eden.datatypes.Image()
+        'width': 224,           ## width
+        'height': 224,          ## height
+        'input_image': Image()  ## images require eden.datatypes.Image()
     }
 
 @eden_block.run(args = my_args, progress = False)
@@ -38,17 +39,16 @@ def do_something(config):
         index = torch.argmax(pred).item()
         value = pred[index].item()
 
-
     return {
         'value': value,
         'index': index
     }
 
-from eden.hosting import host_block
-
 host_block(
     block = eden_block, 
     port= 5656,
     logfile= 'logs.log',
-    log_level= 'info'
+    log_level= 'debug',
+    max_num_workers= 4,
+    requires_gpu= True
 )
