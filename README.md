@@ -31,7 +31,7 @@ my_args = {
         'input_image': Image()          ## images require eden.datatypes.Image()
     }
 
-@eden_block.run(args = my_args, progress = True)
+@eden_block.run(args = my_args)
 def do_something(config): 
 
     pil_image = config['input_image']
@@ -58,11 +58,20 @@ host_block(
 )
 ```
 
-> `max_num_workers` specifies the maximum number of tasks that should be run in parallel at a time.
+* `block` (`eden.block.BaseBlock`): The eden block you'd want to host. 
+* `port` (`int, optional`): Localhost port where the block would be hosted. Defaults to `8080`.
+* `host` (`str`): specifies where the endpoint would be hosted. Defaults to `'0.0.0.0'`.
+* `max_num_workers` (`int, optional`): Maximum number of tasks to run in parallel. Defaults to `4`.
+* `redis_port` (`int, optional`): Port number for celery's redis server. Defaults to `6379`.
+* `redis_host` (`str, optional`): Place to host redis for `eden.queue.QueueData`. Defaults to `"localhost"`.
+* `requires_gpu` (`bool, optional`): Set this to `False` if your tasks dont necessarily need GPUs.
+* `log_level` (`str, optional`): Can be 'debug', 'info', or 'warning'. Defaults to `'warning'`
+* `exclude_gpu_ids` (`list, optional`): List of gpu ids to not use for hosting. Example: `[2,3]`. Defaults to `[]`
+* `logfile`(`str, optional`): Name of the file where the logs would be stored. If set to `None`, it will show all logs on stdout. Defaults to `'logs.log'`
 
 ## Client
 
-A `Client` is the entity that sends requests to a block to generate art. It requires just the `url` to where the client is hosted.
+A `Client` is the unit that sends requests to a hosted block.
 
 ```python
 from eden.client import Client
