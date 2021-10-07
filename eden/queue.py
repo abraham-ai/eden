@@ -31,20 +31,14 @@ class QueueData(object):
             db = db
         )
 
-        # self.pipeline = self.redis.pipeline()
-
-        self.filename = filename
-
         self.queue = []  ## used to find position on the queue
 
-        ## so that the API remains the same from the outside
         self.name_mapping = {
             'PENDING': 'queued',
             'STARTED': 'running',
             'SUCCESS': 'complete',
             'FAILURE': 'failed'
         }
-
 
     def get_queue(self):
         tokens_in_queue = []
