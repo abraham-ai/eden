@@ -15,7 +15,9 @@ from .datatypes import Image
 from .queue import QueueData
 from .log_utils import Colors
 from .models import Credentials, WaitFor
+from .result_storage import ResultStorage
 from .config_wrapper import ConfigWrapper
+from .data_handlers import Encoder, Decoder
 from .threaded_server import ThreadedServer
 from .progress_tracker import fetch_progress_from_token
 from .log_utils import log_levels, celery_log_levels, PREFIX
@@ -39,17 +41,20 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = '.eden/eden_logs.log', queue_data_filename: str = '.eden/__queue_data__.json', exclude_gpu_ids: list = []):
+def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
     Args:
         block (eden.block.BaseBlock): The eden block you'd want to host. 
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
+        host (str): specifies where the endpoint would be hosted. Defaults to '0.0.0.0'.
         max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
         redis_port (int, optional): Port number for celery's redis server. Defaults to 6379.
         redis_host (str, optional): Place to host redis for `eden.queue.QueueData`. Defaults to localhost.
         requires_gpu (bool, optional): Set this to False if your tasks dont necessarily need GPUs.
+        log_level (str, optional): Can be 'debug', 'info', or 'warning'. Defaults to 'warning'
+        logfile(str, optional): Name of the file where the logs would be stored. If set to None, it will show all logs on stdout. Defaults to 'logs.log'
         exclude_gpu_ids (list, optional): List of gpu ids to not use for hosting. Example: [2,3]
     """
 
@@ -140,13 +145,11 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
         celery_app = celery_app,
         redis_port= redis_port,
         redis_host = redis_host,
-        filename = queue_data_filename
     )
 
     """
     Initiate encoder and decoder
     """
-    from .data_handlers import Encoder, Decoder
 
     data_encoder = Encoder()
     data_decoder = Decoder()
@@ -169,7 +172,6 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     """
     Initiate result storage on redis
     """
-    from .result_storage import ResultStorage
 
     result_storage = ResultStorage(
         redis_host = redis_host,
