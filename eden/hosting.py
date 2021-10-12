@@ -121,6 +121,11 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     celery_app.conf.worker_prefetch_multiplier = 1
 
     """
+    task messages will be acknowledged after the task has been executed 
+    """
+    celery_app.conf.task_acks_late = True
+
+    """
     Initiating GPUAllocator only if requires_gpu is True
     """
     if requires_gpu == True:
