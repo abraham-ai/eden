@@ -167,7 +167,7 @@ class QueueData(object):
     def get_queue_position(self, token):
         try:
             all_tokens = self.get_queue()
-            pos = len(all_tokens) - all_tokens.index(token) - 1  ## reversing the index
+            pos = len(all_tokens) - all_tokens.index(token)  ## reversing the index, and queue starts at 1, not 0
         except:
             pos = None
             raise Exception(f'token: {token} not found in {self.get_queue()}')
