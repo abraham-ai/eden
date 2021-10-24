@@ -37,7 +37,8 @@ class QueueData(object):
             'PENDING': 'queued',
             'STARTED': 'running',
             'SUCCESS': 'complete',
-            'FAILURE': 'failed'
+            'FAILURE': 'failed',
+            'REVOKED': 'revoked'
         }
 
     def get_queue(self):
@@ -128,7 +129,7 @@ class QueueData(object):
 
         else:
             '''
-            The job is either complete or running, 
+            The job is either complete or running or revoked, 
             these can be found on the redis keys
             '''
 
