@@ -384,7 +384,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                     'output': results['output']
                 }
 
-            elif status['status'] == 'queued' or status['status'] == 'starting' or status['status'] == 'failed':
+            elif status['status'] == 'queued' or status['status'] == 'starting' or status['status'] == 'failed' or status['status'] == 'revoked':
 
                 results = result_storage.get(token = token)
                 
