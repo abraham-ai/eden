@@ -71,4 +71,4 @@ To make eden start it, in `docker-compose.yaml` after line 45 i added this line 
 
 Then I ran 100 jobs.
 
-Wait until `eden-3` breaks.
+Wait until `eden-3` breaks. Check the failed jobs in flower.
