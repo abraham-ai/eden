@@ -6,7 +6,7 @@ import uvicorn
 import logging
 import threading
 import traceback
-from fastapi import FastAPI
+from fastapi import FastAPI, status, Response
 from prometheus_client import Gauge
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.middleware.cors import CORSMiddleware
@@ -219,6 +219,9 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
             }
+            # this should never happen, shut it down to prevent further jobs being consumed
+            # by thid faulty worker
+            celery_app.control.shutdown()
 
         else:
 
@@ -243,7 +246,14 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 """
                 args.progress = block.get_progress_bar(token= token, result_storage = result_storage)
 
-            output = block.__run__(args)
+            try:
+                output = block.__run__(args)
+
+            # prevent further jobs from hitting a busy gpu after a caught exception
+            except Exception as e:
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
+                raise Exception(str(e))        
 
             if requires_gpu == True:
                 gpu_allocator.set_as_free(name = gpu_name)
@@ -258,7 +268,20 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 token = token
             )
 
-            return success ## return None because results go to result_storage instead
+        return None ## return None because results go to result_storage instead
+
+
+    # Kubernetes readiness probe.
+    @app.get('/ready', status_code=200)
+    def live(response: Response):
+        return {}         
+    
+    # Kubernetes liveness probe    
+    @app.get('/live', status_code=200)
+    def live(response: Response):
+        # Placeholder for when we find a good condition to tell kuberentes to restart us
+        # response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {}   
 
     @app.post('/run')
     def start_run(config: block.data_model):
