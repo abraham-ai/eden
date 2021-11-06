@@ -265,7 +265,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 token = token
             )
 
-        return success ## return None because results go to result_storage instead
+            return success ## return None because results go to result_storage instead
 
     @app.post('/run')
     def start_run(config: block.data_model):
