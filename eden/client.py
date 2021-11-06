@@ -31,9 +31,9 @@ class Client(object):
             config (dict): Dictionary that contains all of the necessary arguments needed to run your task. The keys should be the same as the ones found on `args` in the `@eden.BaseBlock.run()` decorator.
 
         There are 3 main internal steps in this function: 
-        * `parse_for_sending_request`: Converts `config` to json, ready to be sent to the eden host. Special wrappers found in eden.datatypes help encode special datatypes like images. 
+        * `self.encoder.encode()`: Converts `config` to json, ready to be sent to the eden host. Special wrappers found in eden.datatypes help encode special datatypes like images. 
         * `requests.post`: sends a request to the hosted block with the json containing your inputs
-        * `parse_response_after_run`: converts the json received from the request back into a dictionary. If there are any special datatypes like eden.datatypes.Image, they're converted back to more "human" formats like PIL images.
+        * `seld.decoder.decode()`: converts the json received from the request back into a dictionary. If there are any special datatypes like eden.datatypes.Image, they're converted back to more "human" formats like PIL images.
 
         Raises:
             json.decoder.JSONDecodeError: If an invalid json is returned which cannot be decoded.
