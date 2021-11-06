@@ -219,9 +219,6 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
             status = {
                 'status': 'No GPUs are available at the moment, please try again later',
             }
-            # this should never happen, shut it down to prevent further jobs being consumed
-            # by thid faulty worker
-            celery_app.control.shutdown()
 
         else:
 
@@ -271,17 +268,6 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
         return None ## return None because results go to result_storage instead
 
 
-    # Kubernetes readiness probe.
-    @app.get('/ready', status_code=200)
-    def live(response: Response):
-        return {}         
-    
-    # Kubernetes liveness probe    
-    @app.get('/live', status_code=200)
-    def live(response: Response):
-        # Placeholder for when we find a good condition to tell kuberentes to restart us
-        # response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return {}   
 
     @app.post('/run')
     def start_run(config: block.data_model):
