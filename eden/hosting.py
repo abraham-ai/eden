@@ -243,7 +243,14 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 """
                 args.progress = block.get_progress_bar(token= token, result_storage = result_storage)
 
-            output = block.__run__(args)
+            try:
+                output = block.__run__(args)
+
+            # prevent further jobs from hitting a busy gpu after a caught exception
+            except Exception as e:
+                if requires_gpu == True:
+                    gpu_allocator.set_as_free(name = gpu_name)
+                raise Exception(str(e))        
 
             if requires_gpu == True:
                 gpu_allocator.set_as_free(name = gpu_name)
