@@ -6,7 +6,7 @@ import uvicorn
 import logging
 import threading
 import traceback
-from fastapi import FastAPI, status, Response
+from fastapi import FastAPI
 from prometheus_client import Gauge
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.middleware.cors import CORSMiddleware
@@ -265,7 +265,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
                 token = token
             )
 
-        return None ## return None because results go to result_storage instead
+        return success ## return None because results go to result_storage instead
 
 
 
