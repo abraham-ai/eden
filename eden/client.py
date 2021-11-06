@@ -124,7 +124,7 @@ class Client(object):
         while True:
             resp = self.fetch(token = token)
 
-            if resp['status'] == 'complete':
+            if resp['status']['status'] == 'complete':
                 break
             else:
                 if show_progress == True:
