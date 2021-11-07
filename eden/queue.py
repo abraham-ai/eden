@@ -16,14 +16,12 @@ class QueueData(object):
     Args:
         filename (str): name of the json file where the data is stored. Defaults to: "__eden_queue__.json"
     """
-    def __init__(self, celery_app, redis_port: int,  redis_host: str , filename: str = '__eden_queue__.json', db = 0):
+    def __init__(self, redis_port: int,  redis_host: str , filename: str = '__eden_queue__.json', db = 0):
 
         '''
         to wipe all redis stuff, use:
         $ redis-cli flushall
         '''
-
-        self.celery_app = celery_app
 
         self.redis = Redis(
             host= redis_host,

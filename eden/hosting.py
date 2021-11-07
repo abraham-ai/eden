@@ -147,7 +147,6 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     Initiating queue data to keep track of the queue
     """
     queue_data = QueueData(
-        celery_app = celery_app,
         redis_port= redis_port,
         redis_host = redis_host,
     )
