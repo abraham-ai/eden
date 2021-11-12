@@ -41,7 +41,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
+def host_block(block, queue='celery', port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -114,6 +114,11 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
 
     celery_app.conf.worker_send_task_events = True
     celery_app.conf.task_send_sent_event = True
+    
+    """
+    each block gets its wown queue
+    """
+    celery_app.conf.task_default_queue = queue
 
     """
     set prefetch mult to 1 so that tasks dont get pre-fetched by workers 
@@ -193,7 +198,6 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     """
     @celery_app.task(name = 'run')
     def run(args, token:str):  
-
         ## update queue gauge for prometheus
         queue_gauge.set(queue_data.get_queue_length())  
         
@@ -279,7 +283,8 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
         token = generate_random_string(len = 10)
 
         kwargs = dict(args = dict(config), token = token)
-        res = run.apply_async(kwargs = kwargs, task_id = token)
+
+        res = run.apply_async(kwargs = kwargs, task_id = token, queue = str(config.name) or "celery")
 
         initial_dict = {
             'config': dict(config),
@@ -432,7 +437,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
         message = PREFIX + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
-        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile)
+        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile, queue = queue)
 
     message = PREFIX + " Stopped"
 
