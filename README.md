@@ -68,6 +68,7 @@ host_block(
 * `log_level` (`str, optional`): Can be 'debug', 'info', or 'warning'. Defaults to `'warning'`
 * `exclude_gpu_ids` (`list, optional`): List of gpu ids to not use for hosting. Example: `[2,3]`. Defaults to `[]`
 * `logfile`(`str, optional`): Name of the file where the logs would be stored. If set to `None`, it will show all logs on stdout. Defaults to `'logs.log'`
+* `queue`(`str, optional`): Name of the celery queue used for the block. Useful when hosting multiple blocks with the same redis.  (defaults on `celery`)
 
 ## Client
 
@@ -86,6 +87,7 @@ After you start a task with `run()` as shown below, it returns a token as `run_r
 
 ```python
 config = {
+    'queue': 'celery', # specify block's queue if running multiple blocks
     'prompt': 'let there be light',
     'number': 2233,
     'input_image': Image('your_image.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
