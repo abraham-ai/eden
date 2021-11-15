@@ -1,21 +1,18 @@
 # Eden
 
-
-> You were in Eden, the garden of God. Every kind of precious stone adorned you: ruby, topaz, and diamond, beryl, onyx, and jasper, sapphire, turquoise, and emerald. Your mountings and settings were crafted in gold, prepared on the day of your creation. 
-> 
+> You were in Eden, the garden of God. Every kind of precious stone adorned you: ruby, topaz, and diamond, beryl, onyx, and jasper, sapphire, turquoise, and emerald. Your mountings and settings were crafted in gold, prepared on the day of your creation.
+>
 > Ezekiel 28:13
-
 
 Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pretty much any python function as a hosted endpoint.
 
-
 ## Setting up a block
 
-Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `BaseBlock`, they're the units which take certain inputs and generate art accordingly. 
+Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `BaseBlock`, they're the units which take certain inputs and generate art accordingly.
 
-The first step is to configure `run()`. 
+The first step is to configure `run()`.
 
-```python 
+```python
 from eden.block import BaseBlock
 from eden.datatypes import Image
 
@@ -24,15 +21,15 @@ eden_block = BaseBlock()
 
 `run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports text, images, and numbers as inputs.
 
-```python 
+```python
 my_args = {
         'prompt': 'let there be light', ## text
-        'number': 12345,                ## numbers 
+        'number': 12345,                ## numbers
         'input_image': Image()          ## images require eden.datatypes.Image()
     }
 
 @eden_block.run(args = my_args)
-def do_something(config): 
+def do_something(config):
 
     pil_image = config['input_image']
     some_number = config['number']
@@ -50,7 +47,7 @@ def do_something(config):
 from eden.hosting import host_block
 
 host_block(
-    block = eden_block, 
+    block = eden_block,
     port= 5656,
     logfile= 'logs.log',
     log_level= 'info',
@@ -58,17 +55,17 @@ host_block(
 )
 ```
 
-* `block` (`eden.block.BaseBlock`): The eden block you'd want to host. 
-* `port` (`int, optional`): Localhost port where the block would be hosted. Defaults to `8080`.
-* `host` (`str`): specifies where the endpoint would be hosted. Defaults to `'0.0.0.0'`.
-* `max_num_workers` (`int, optional`): Maximum number of tasks to run in parallel. Defaults to `4`.
-* `redis_port` (`int, optional`): Port number for celery's redis server. Defaults to `6379`.
-* `redis_host` (`str, optional`): Place to host redis for `eden.queue.QueueData`. Defaults to `"localhost"`.
-* `requires_gpu` (`bool, optional`): Set this to `False` if your tasks dont necessarily need GPUs.
-* `log_level` (`str, optional`): Can be 'debug', 'info', or 'warning'. Defaults to `'warning'`
-* `exclude_gpu_ids` (`list, optional`): List of gpu ids to not use for hosting. Example: `[2,3]`. Defaults to `[]`
-* `logfile`(`str, optional`): Name of the file where the logs would be stored. If set to `None`, it will show all logs on stdout. Defaults to `'logs.log'`
-* `queue`(`str, optional`): Name of the celery queue used for the block. Useful when hosting multiple blocks with the same redis.  (defaults on `celery`)
+- `block` (`eden.block.BaseBlock`): The eden block you'd want to host.
+- `port` (`int, optional`): Localhost port where the block would be hosted. Defaults to `8080`.
+- `host` (`str`): specifies where the endpoint would be hosted. Defaults to `'0.0.0.0'`.
+- `max_num_workers` (`int, optional`): Maximum number of tasks to run in parallel. Defaults to `4`.
+- `redis_port` (`int, optional`): Port number for celery's redis server. Defaults to `6379`.
+- `redis_host` (`str, optional`): Place to host redis for `eden.queue.QueueData`. Defaults to `"localhost"`.
+- `requires_gpu` (`bool, optional`): Set this to `False` if your tasks dont necessarily need GPUs.
+- `log_level` (`str, optional`): Can be 'debug', 'info', or 'warning'. Defaults to `'warning'`
+- `exclude_gpu_ids` (`list, optional`): List of gpu ids to not use for hosting. Example: `[2,3]`. Defaults to `[]`
+- `logfile`(`str, optional`): Name of the file where the logs would be stored. If set to `None`, it will show all logs on stdout. Defaults to `'logs.log'`
+- `queue_name`(`str, optional`): Name of the celery queue used for the block. Useful when hosting multiple blocks with the same redis. (defaults on `celery`)
 
 ## Client
 
@@ -87,7 +84,7 @@ After you start a task with `run()` as shown below, it returns a token as `run_r
 
 ```python
 config = {
-    'queue': 'celery', # specify block's queue if running multiple blocks
+    'queue_name': 'celery', # specify block's queue if running multiple blocks
     'prompt': 'let there be light',
     'number': 2233,
     'input_image': Image('your_image.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
@@ -96,9 +93,9 @@ config = {
 run_response = c.run(config)
 ```
 
-Fetching results/checking task status using the token can be done using `fetch()`. 
+Fetching results/checking task status using the token can be done using `fetch()`.
 
 ```python
 results = c.fetch(token = run_response['token'])
-print(results)  
+print(results)
 ```

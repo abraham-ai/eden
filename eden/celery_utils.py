@@ -1,6 +1,7 @@
 from .log_utils import PREFIX
 
-def run_celery_app(app, loglevel = 'ERROR', max_num_workers = 4, pool = 'threads', logfile = None, queue = 'celery'):
+
+def run_celery_app(app, loglevel='ERROR', max_num_workers=4, pool='threads', logfile=None, queue_name='celery'):
     """
     Runs a Celery() instance.
 
@@ -18,12 +19,12 @@ def run_celery_app(app, loglevel = 'ERROR', max_num_workers = 4, pool = 'threads
         f'--loglevel={loglevel}',
         f'--concurrency={max_num_workers}',
         f'--pool={pool}',
-        f'--queues={queue}'
+        f'--queues={queue_name}'
     ]
 
     if logfile is not None:
         argv.append(f'--logfile={logfile}')
 
     print(PREFIX + ' Running celery worker with args: ', argv)
-    
+
     app.worker_main(argv)
