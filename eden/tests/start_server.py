@@ -12,7 +12,7 @@ def run_server():
         requires_gpu= False,
         max_num_workers= 3,
         host= '0.0.0.0',
-        redis_host='host.docker.internal'
+        redis_host='172.17.0.1'
     )
 
 def run_server_in_another_thread():
