@@ -43,6 +43,8 @@ jobs:
           echo "Running eden..."
           docker run -d -p 127.0.0.1:5656:5656/tcp --name eden-server eden-test-server 
 
+          sleep 10
+
           echo "Running tests..."
           pytest eden/tests
 
