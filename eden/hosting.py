@@ -41,7 +41,7 @@ tool to allocate gpus on queued tasks
 '''
 from .gpu_allocator import GPUAllocator
 
-def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
+def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
     """
     Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
@@ -118,7 +118,7 @@ def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_nu
     """
     each block gets its wown queue
     """
-    celery_app.conf.task_default_queue = queue_name
+    celery_app.conf.task_default_queue = block.name
 
     """
     set prefetch mult to 1 so that tasks dont get pre-fetched by workers 
@@ -154,6 +154,7 @@ def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_nu
     queue_data = QueueData(
         redis_port= redis_port,
         redis_host = redis_host,
+        queue_name = block.name
     )
 
     """
@@ -181,10 +182,10 @@ def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_nu
     """
     Initiate result storage on redis
     """
-
+    
     result_storage = ResultStorage(
         redis_host = redis_host,
-        redis_port= redis_port
+        redis_port= redis_port,
     )
 
     """
@@ -284,7 +285,7 @@ def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_nu
 
         kwargs = dict(args = dict(config), token = token)
 
-        res = run.apply_async(kwargs = kwargs, task_id = token, queue_name = str(config.name) or "celery")
+        res = run.apply_async(kwargs = kwargs, task_id = token, queue_name = block.name)
 
         initial_dict = {
             'config': dict(config),
@@ -437,7 +438,7 @@ def host_block(block, queue_name='celery', port = 8080, host = '0.0.0.0', max_nu
         message = PREFIX + " Initializing celery worker on: " + f"redis://localhost:{str(redis_port)}"
         print(message)
         ## starts celery app
-        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile, queue_name = queue_name)
+        run_celery_app(celery_app, max_num_workers=max_num_workers, loglevel= celery_log_levels[log_level], logfile = logfile, queue_name = block.name)
 
     message = PREFIX + " Stopped"
 

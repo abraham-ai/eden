@@ -10,15 +10,17 @@ class BaseBlock(object):
     help host them on a server with multiple GPUs.
 
     Args:
-        progress (bool): set to True if you want to update the progress of your task with `config['__progress__']`
+        progress (bool): set to True if you want to update the progress of your task with `config.progress`
+        name (str): unique name to be used to identify this block. Useful if you're planning to host the queues of multiple different blocks on the same redis.
     """
-    def __init__(self, progress = True):
+    def __init__(self, progress = True, name = 'eden_block'):
         
         self.__run__ = None
         self.__setup__ = None
         self.default_args = None
         self.data_model = None
         self.progress = False
+        self.name = name
 
     def get_progress_bar(self, token: str, result_storage):
         self.progress_tracker = ProgressTracker(token = token, result_storage = result_storage)
