@@ -4,7 +4,6 @@ from .log_utils import Colors
 
 class GPUAllocator(object):
     def __init__(self, exclude_gpu_ids: list = []):
-
         """
         Usage:
 

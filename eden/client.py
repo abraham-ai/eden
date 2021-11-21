@@ -120,11 +120,21 @@ class Client(object):
 
 
     def await_results(self, token, fetch_interval = 1, show_progress = True):
+        """Keeps pinging the server and waits until it has obtained the output/failed the job.
+
+        Args:
+            token (str): unique token used to identify the task
+            fetch_interval (int, optional): Amount of time in seconds to wait after each /fetch. Defaults to 1.
+            show_progress (bool, optional): If set to True, it prints the status and the progress on stdout. Defaults to True.
+
+        Returns:
+            dict : output/failure message of the given task
+        """
 
         while True:
             resp = self.fetch(token = token)
 
-            if resp['status']['status'] == 'complete':
+            if resp['status']['status'] == 'complete' or resp['status']['status'] == 'failed':
                 break
             else:
                 if show_progress == True:
@@ -135,6 +145,10 @@ class Client(object):
         return resp
 
     def stop_host(self, time = 10):
+        """
+        Stops a running block remotely after `time` seconds.
+        """
+        
         config = {
             'time_to_wait': time
         }
