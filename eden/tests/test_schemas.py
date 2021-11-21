@@ -24,7 +24,7 @@ def get_keys(d:dict):
     return list(d.keys())
 
 def add_a_task(filename :str):
-    c = Client(url = 'http://0.0.0.0:5656', username= 'test_abraham')
+    c = Client(url = 'http://localhost:5656', username= 'test_abraham', verify_ssl=False)
 
     config = {
         'prompt': 'let there be tests',
@@ -44,7 +44,7 @@ class TestSchemas(unittest.TestCase):
         test_filename = 'test_image.jpg'
         pil_image = PIL.Image.open(filename)
 
-        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham')
+        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham', verify_ssl=False)
 
         config = {
             'prompt': 'let there be tests',

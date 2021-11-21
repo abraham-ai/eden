@@ -11,7 +11,8 @@ def run_server():
         log_level= 'info',
         requires_gpu= False,
         max_num_workers= 3,
-        host= 'localhost'
+        host= '0.0.0.0',
+        redis_host='host.docker.internal'
     )
 
 def run_server_in_another_thread():

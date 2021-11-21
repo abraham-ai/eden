@@ -27,7 +27,7 @@ class TestUpdateConfig(unittest.TestCase):
         filename = 'images/cloud.jpg'
         pil_image = PIL.Image.open(filename)
 
-        c = Client(url = 'http://0.0.0.0:5656', username= 'test_abraham')
+        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham', verify_ssl=False)
 
         config = {
             'prompt': 'let there be tests',
