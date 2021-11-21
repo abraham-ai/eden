@@ -41,7 +41,7 @@ jobs:
           docker build . -t eden-test-server
 
           echo "Running eden..."
-          docker run -d -p --name eden-server 127.0.0.1:5656:5656/tcp eden-test-server 
+          docker run -d -p 127.0.0.1:5656:5656/tcp --name eden-server eden-test-server 
 
           echo "Running tests..."
           pytest eden/tests
