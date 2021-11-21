@@ -13,10 +13,9 @@ class QueueData(object):
     """
     Simple way to keep a track of the tasks done on multiple threads. 
 
-    Args:
-        filename (str): name of the json file where the data is stored. Defaults to: "__eden_queue__.json"
+    
     """
-    def __init__(self, redis_port: int,  redis_host: str , filename: str = '__eden_queue__.json', db = 0):
+    def __init__(self, redis_port: int,  redis_host: str , queue_name: str , db = 0):
 
         '''
         to wipe all redis stuff, use:
@@ -39,10 +38,12 @@ class QueueData(object):
             'REVOKED': 'revoked'
         }
 
+        self.queue_name = queue_name
+
     def get_queue(self):
         tokens_in_queue = []
 
-        queue_stuff = self.redis.lrange('celery', 0 , -1)
+        queue_stuff = self.redis.lrange(self.queue_name, 0 , -1)
         
         if queue_stuff is not None:
             
@@ -54,7 +55,7 @@ class QueueData(object):
         return  tokens_in_queue
 
     def get_queue_length(self): 
-        length = self.redis.llen('celery')
+        length = self.redis.llen(self.queue_name)
         return length
 
     def check_if_token_in_queue(self, token):
