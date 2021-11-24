@@ -47,14 +47,14 @@ jobs:
           sleep 10
 
           echo "Running tests..."
-          pytest eden/tests
+          pytest eden/tests --cov=torch_dreams --cov-report=xml
 
           echo "Stopping stuff ..."
           docker stop redis
           docker stop eden-server
 
-      # - name: "Upload coverage to Codecov"
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     fail_ci_if_error: true
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
           
