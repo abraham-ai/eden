@@ -1,5 +1,7 @@
 # Eden
 
+[![tests](https://github.com/abraham-ai/eden/actions/workflows/main.yml/badge.svg)](https://github.com/abraham-ai/eden/actions/workflows/main.yml)
+
 > You were in Eden, the garden of God. Every kind of precious stone adorned you: ruby, topaz, and diamond, beryl, onyx, and jasper, sapphire, turquoise, and emerald. Your mountings and settings were crafted in gold, prepared on the day of your creation.
 >
 > Ezekiel 28:13
