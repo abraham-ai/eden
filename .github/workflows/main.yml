@@ -41,14 +41,14 @@ jobs:
           docker build . -t eden-test-server
 
           echo "Running eden..."
-          docker run -d -p 127.0.0.1:5656:5656/tcp --name eden-server eden-test-server 
+          docker run  -p 127.0.0.1:5656:5656/tcp --name eden-server eden-test-server 
 
-          echo "Running tests..."
-          pytest eden/tests
+          # echo "Running tests..."
+          # pytest eden/tests
 
-          echo "Stopping stuff ..."
-          docker stop redis
-          docker stop eden-server
+          # echo "Stopping stuff ..."
+          # docker stop redis
+          # docker stop eden-server
 
       # - name: "Upload coverage to Codecov"
       #   uses: codecov/codecov-action@v1
