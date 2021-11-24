@@ -47,7 +47,7 @@ jobs:
           sleep 10
 
           echo "Running tests..."
-          pytest eden/tests --cov=torch_dreams --cov-report=xml
+          pytest eden/tests --cov=eden --cov-report=xml
 
           echo "Stopping stuff ..."
           docker stop redis
