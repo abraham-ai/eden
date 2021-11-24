@@ -7,7 +7,7 @@ import time
 ## set this to true if you want to run tests on gpus
 REQUIRES_GPU = False
 
-eden_block = BaseBlock()
+eden_block = BaseBlock(name = 'eden_block')
 
 my_args = {
         'prompt': 'let there be tests', ## text
@@ -38,12 +38,3 @@ def do_something(config):
         'number': some_number,       ## returning numbers
         'image': Image(pil_image)    ## Image() works on PIL.Image, numpy.array and on jpg an png files
     }
-
-# host_block(
-#     block = eden_block, 
-#     port= 5656,
-#     logfile= 'test_eden_logs.log',
-#     log_level= 'info',
-#     requires_gpu= False,
-#     max_num_workers= 2
-# )
