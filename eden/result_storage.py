@@ -16,6 +16,8 @@ class ResultStorage(object):
             port= str(redis_port),
             db = db
         )
+        
+        self.redis.ping()
 
     def add(self, token, encoded_results: dict):
 
