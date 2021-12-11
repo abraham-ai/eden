@@ -19,7 +19,7 @@ class BaseBlock(object):
         self.__setup__ = None
         self.default_args = None
         self.data_model = None
-        self.progress = False
+        self.progress = progress
         self.name = name
 
     def get_progress_bar(self, token: str, result_storage):
