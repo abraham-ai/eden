@@ -102,3 +102,12 @@ Fetching results/checking task status using the token can be done using `fetch()
 results = c.fetch(token = run_response['token'])
 print(results)
 ```
+
+## Prometheus metrics out of the box
+
+Eden supports the following internal metrics which have been exposed via prometheus:
+
+* `num_queued_jobs`: Specifies the number of queued jobs
+* `num_running_jobs`: Specifies the number of running jobs
+* `num_failed_jobs`: Specifies the number of failed jobs
+* `num_succeeded_jobs`: Specifies the number of succeeded jobs
