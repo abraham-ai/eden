@@ -21,6 +21,7 @@ from .data_handlers import Encoder, Decoder
 from .threaded_server import ThreadedServer
 from .progress_tracker import fetch_progress_from_token
 from .log_utils import log_levels, celery_log_levels, PREFIX
+from .prometheus_utils import PrometheusMetrics
 
 from .utils import (
     stop_everything_gracefully,
@@ -189,18 +190,24 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     )
 
     """
-    initiate queue gauge for prometheus, 
-    it tells prometheus how many jobs are currently queued
+    initiate a wrapper which handles 4 metrics for prometheus:
+    * number of queued jobs
+    * number of running jobs
+    * number of failed jobs
+    * number of succeeded jobs
     """
-    queue_gauge = Gauge('num_queued_jobs', 'number of jobs in the queue')
+    prometheus_metrics = PrometheusMetrics()
+    
 
     """ 
     define celery task
     """
     @celery_app.task(name = 'run')
     def run(args, token:str):  
-        ## update queue gauge for prometheus
-        queue_gauge.set(queue_data.get_queue_length())  
+
+        ## job moves from queue to running
+        prometheus_metrics.queued.dec(1) 
+        prometheus_metrics.running.inc(1) 
         
         args = data_decoder.decode(args)
         '''
@@ -249,9 +256,17 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
 
             try:
                 output = block.__run__(args)
+                
+                # job moves from running to succeeded
+                prometheus_metrics.running.dec(1)
+                prometheus_metrics.succeeded.inc(1)
 
             # prevent further jobs from hitting a busy gpu after a caught exception
             except Exception as e:
+
+                # job moves from running to failed
+                prometheus_metrics.running.dec(1)
+                prometheus_metrics.failed.inc(1)
                 if requires_gpu == True:
                     gpu_allocator.set_as_free(name = gpu_name)
                 raise Exception(str(e))        
@@ -274,8 +289,8 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
     @app.post('/run')
     def start_run(config: block.data_model):
 
-        ## update queue gauge for prometheus
-        queue_gauge.set(queue_data.get_queue_length())  
+        ## job moves into queue
+        prometheus_metrics.queued.inc(1)
 
         '''
         refer:
