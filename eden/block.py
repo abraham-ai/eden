@@ -92,24 +92,3 @@ class BaseBlock(object):
             return fn
 
         return decorator
-
-
-class BlockBunch(object):
-    def __init__(self, blocks):
-        self.block_names = list(blocks.keys())
-        self.blocks = list(blocks.values())
-
-    def __setup__(self):
-        for block in self.blocks:
-            block.__setup__()
-
-    def run(self, inputs: dict = {}):
-        
-        for i in range(len(self.blocks)): 
-            self.blocks[i].check_input_types(inputs)
-            inputs = self.blocks[i].__run__(inputs)
-
-        return inputs
-
-    def __run__(self, inputs):
-        return self.run(inputs)
