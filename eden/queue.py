@@ -15,7 +15,7 @@ class QueueData(object):
 
     
     """
-    def __init__(self, redis_port: int,  redis_host: str , queue_name: str , db = 0):
+    def __init__(self, redis_port: int,  redis_host: str , queue_name: str , redis_db = 0):
 
         '''
         to wipe all redis stuff, use:
@@ -25,7 +25,7 @@ class QueueData(object):
         self.redis = Redis(
             host= redis_host,
             port= str(redis_port),
-            db = db
+            db = redis_db
         )
 
         self.queue = []  ## used to find position on the queue

@@ -2,7 +2,7 @@ from redis import Redis
 from .utils import dict_to_bytes, bytes_to_dict
 
 class ResultStorage(object): 
-    def __init__(self, redis_host, redis_port, db = 1): 
+    def __init__(self, redis_host, redis_port, redis_db = 1): 
         """Wrapper over redis to fetch and store results.
 
         Args:
@@ -14,7 +14,7 @@ class ResultStorage(object):
         self.redis = self.redis = Redis(
             host= redis_host,
             port= str(redis_port),
-            db = db
+            db = redis_db
         )
         
         self.redis.ping()
