@@ -14,9 +14,9 @@ class TestBlock(unittest.TestCase):
 
         ## first try connecting to 0.0.0.0 (works for local machines) and if that does not work then connect to 172.17.0.1 (gh actions) 
         try:
-            result_storage = ResultStorage(redis_host = "0.0.0.0", redis_port = 6379, db = 1)
+            result_storage = ResultStorage(redis_host = "0.0.0.0", redis_port = 6379, redis_db = 0)
         except redis.exceptions.ConnectionError:
-            result_storage = ResultStorage(redis_host = "172.17.0.1", redis_port = 6379, db = 1)
+            result_storage = ResultStorage(redis_host = "172.17.0.1", redis_port = 6379, redis_db = 0)
         
         self.assertTrue(isinstance(result_storage.redis , Redis))
 
