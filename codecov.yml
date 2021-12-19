@@ -1,0 +1,5 @@
+ignore:
+    - "eden/tests/start_server.py"
+    - "eden/tests/server.py"
+    - "eden/tests/stop_server.py"
+    - "eden/hosting.py"
