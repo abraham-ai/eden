@@ -13,15 +13,15 @@ Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pretty 
 
 ## Setting up a block
 
-Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `BaseBlock`, they're the units which take certain inputs and generate art accordingly.
+Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `Block`, they're the units which take certain inputs and generate art accordingly.
 
 The first step is to configure `run()`.
 
 ```python
-from eden.block import BaseBlock
+from eden.block import Block
 from eden.datatypes import Image
 
-eden_block = BaseBlock()
+eden_block = Block()
 ```
 
 `run()` is supposed to be the function that runs every time someone wants to use this pipeline to generate art. For now it supports text, images, and numbers as inputs.
@@ -60,7 +60,7 @@ host_block(
 )
 ```
 
-- `block` (`eden.block.BaseBlock`): The eden block you'd want to host.
+- `block` (`eden.block.Block`): The eden block you'd want to host.
 - `port` (`int, optional`): Localhost port where the block would be hosted. Defaults to `8080`.
 - `host` (`str`): specifies where the endpoint would be hosted. Defaults to `'0.0.0.0'`.
 - `max_num_workers` (`int, optional`): Maximum number of tasks to run in parallel. Defaults to `4`.
