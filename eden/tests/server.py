@@ -1,4 +1,4 @@
-from eden.block import BaseBlock
+from eden.block import Block
 from eden.datatypes import Image
 
 from eden.hosting import host_block
@@ -7,7 +7,7 @@ import time
 ## set this to true if you want to run tests on gpus
 REQUIRES_GPU = False
 
-eden_block = BaseBlock(name = 'eden_block')
+eden_block = Block(name = 'eden_block')
 
 my_args = {
         'prompt': 'let there be tests', ## text

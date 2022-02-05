@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from eden.block import BaseBlock
+from eden.block import Block
 from eden.datatypes import (
     Image,
 )
@@ -10,7 +10,7 @@ class TestBlock(unittest.TestCase):
 
     def test_block_init(self):
         
-        eden_block = BaseBlock(progress= True, name = 'some_block_name')
+        eden_block = Block(progress= True, name = 'some_block_name')
 
         self.assertTrue(eden_block.__run__ == None)
         self.assertTrue(eden_block.__setup__ == None)
@@ -21,7 +21,7 @@ class TestBlock(unittest.TestCase):
     
     def test_block_build_pydantic_model(self):
 
-        eden_block = BaseBlock(progress= True, name = 'some_block_name')
+        eden_block = Block(progress= True, name = 'some_block_name')
 
         my_args = {
                 'prompt': 'let there be light', ## text
