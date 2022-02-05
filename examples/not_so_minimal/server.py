@@ -1,4 +1,4 @@
-from eden.block import BaseBlock
+from eden.block import Block
 from eden.datatypes import Image
 from eden.hosting import host_block
 
@@ -14,7 +14,7 @@ my_transforms = transforms.Compose([
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-eden_block = BaseBlock()
+eden_block = Block()
 
 my_args = {
         'width': 224,           ## width

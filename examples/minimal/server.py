@@ -1,7 +1,7 @@
-from eden.block import BaseBlock
+from eden.block import Block
 from eden.hosting import host_block
 
-eden_block = BaseBlock()
+eden_block = Block()
 
 my_args = {
         'prompt': 'hello world', 
