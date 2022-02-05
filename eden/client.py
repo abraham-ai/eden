@@ -28,7 +28,7 @@ class Client(object):
         The user might get queued depending on the the number of pending jobs on the host.
 
         Args:
-            config (dict): Dictionary that contains all of the necessary arguments needed to run your task. The keys should be the same as the ones found on `args` in the `@eden.BaseBlock.run()` decorator.
+            config (dict): Dictionary that contains all of the necessary arguments needed to run your task. The keys should be the same as the ones found on `args` in the `@eden.Block.run()` decorator.
 
         There are 3 main internal steps in this function: 
         * `self.encoder.encode()`: Converts `config` to json, ready to be sent to the eden host. Special wrappers found in eden.datatypes help encode special datatypes like images. 

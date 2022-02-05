@@ -3,14 +3,14 @@ from .data_handlers import Encoder, Decoder
 
 class ConfigWrapper(object):
     """
-    Wrapper which acts a way to store both the input config got eden.block.BaseBlock.__run__() 
+    Wrapper which acts a way to store both the input config got eden.block.Block.__run__() 
     and some special components like gpu IDs and progress trackers. 
 
     refer: 
     https://github.com/abraham-ai/eden/issues/14
 
     Args:
-        data (dict): input dictionary to be fed into the `eden.block.BaseBlock.__run__()` function
+        data (dict): input dictionary to be fed into the `eden.block.Block.__run__()` function
         filename (str): filename of the output json file for the current run. Defined as '{results_dir}/{token}.json'
         gpu (str): 'cuda:{x}' where x is the GPU ID provided by `eden.gpu_allocator.GPUAllocator`
         progress (ProgressTracker, optional): If provided, can be used to update the progress of the job. Defaults to None.

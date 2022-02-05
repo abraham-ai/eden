@@ -44,10 +44,10 @@ from .gpu_allocator import GPUAllocator
 
 def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_port = 6379, redis_host = 'localhost', requires_gpu = True, log_level = 'warning', logfile = 'logs.log', exclude_gpu_ids: list = []):
     """
-    Use this to host your eden.BaseBlock on a server. Supports multiple GPUs and queues tasks automatically with celery.
+    Use this to host your eden.Block on a server. Supports multiple GPUs and queues tasks automatically with celery.
 
     Args:
-        block (eden.block.BaseBlock): The eden block you'd want to host. 
+        block (eden.block.Block): The eden block you'd want to host. 
         port (int, optional): Localhost port where the block would be hosted. Defaults to 8080.
         host (str): specifies where the endpoint would be hosted. Defaults to '0.0.0.0'.
         max_num_workers (int, optional): Maximum number of tasks to run in parallel. Defaults to 4.
@@ -250,7 +250,7 @@ def host_block(block, port = 8080, host = '0.0.0.0', max_num_workers = 4, redis_
 
             if block.progress == True:
                 """
-                if progress was set to True on @eden.BaseBlock.run() decorator, then add a progress tracker into the config
+                if progress was set to True on @eden.Block.run() decorator, then add a progress tracker into the config
                 """
                 args.progress = block.get_progress_bar(token= token, result_storage = result_storage)
 

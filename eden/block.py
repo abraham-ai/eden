@@ -4,7 +4,7 @@ from pydantic import create_model
 from .datatypes import Image
 from .progress_tracker import ProgressTracker
 
-class BaseBlock(object):
+class Block(object):
     """
     Meant to serve as the unit which encapsulates your functions and 
     help host them on a server with multiple GPUs.
