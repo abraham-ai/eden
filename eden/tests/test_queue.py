@@ -12,42 +12,56 @@ from eden.datatypes import (
     Image,
 )
 
-#misc imports 
+# misc imports
 import PIL
 import numpy as np
 
 
-#misc funtions
-def sleep_and_count(t = 5):
+# misc funtions
+def sleep_and_count(t=5):
     for i in range(t):
-        print(f'sleeping: {i+1}/{t}')
+        print(f"sleeping: {i+1}/{t}")
         time.sleep(1)
 
-class TestQueue(unittest.TestCase):
 
+class TestQueue(unittest.TestCase):
     def test_queue(self):
 
-        filename = 'images/cloud.jpg'
+        filename = "images/cloud.jpg"
 
         try:
-            queue_data = QueueData(redis_host = "0.0.0.0", redis_port = 6379, redis_db = 0, queue_name = 'eden_block')
+            queue_data = QueueData(
+                redis_host="0.0.0.0",
+                redis_port=6379,
+                redis_db=0,
+                queue_name="eden_block",
+            )
         except redis.exceptions.ConnectionError:
-            queue_data = QueueData(redis_host = "172.17.0.1", redis_port = 6379, redis_db = 0, queue_name = 'eden_block')
+            queue_data = QueueData(
+                redis_host="172.17.0.1",
+                redis_port=6379,
+                redis_db=0,
+                queue_name="eden_block",
+            )
 
-        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham', verify_ssl=False)
+        c = Client(
+            url="http://127.0.0.1:5656", username="test_abraham", verify_ssl=False
+        )
 
         config = {
-            'prompt': 'let there be tests',
-            'number': 2233,
-            'input_image': Image(filename)  ## Image() supports jpg, png filenames, np.array or PIL.Image
+            "prompt": "let there be tests",
+            "number": 2233,
+            "input_image": Image(
+                filename
+            ),  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
-        
-        self.assertTrue(isinstance(queue_data.redis , Redis))
+
+        self.assertTrue(isinstance(queue_data.redis, Redis))
 
         tokens = []
 
         for i in range(3):
-            token = c.run(config)['token']
+            token = c.run(config)["token"]
             tokens.append(token)
 
         tokens_in_queue = queue_data.get_queue()
@@ -62,9 +76,10 @@ class TestQueue(unittest.TestCase):
         sleep_and_count(1)
         tokens_in_queue = queue_data.get_queue()
         for t in tokens:
-            resp = queue_data.get_status(token = t)
+            resp = queue_data.get_status(token=t)
             self.assertTrue(type(resp) == dict)
-            self.assertTrue('status' in list(resp.keys()))
+            self.assertTrue("status" in list(resp.keys()))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

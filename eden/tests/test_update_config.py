@@ -9,67 +9,74 @@ from eden.datatypes import (
     Image,
 )
 
-#misc imports 
+# misc imports
 import PIL
 import numpy as np
 
 
-#misc funtions
-def sleep_and_count(t = 5):
+# misc funtions
+def sleep_and_count(t=5):
     for i in range(t):
-        print(f'sleeping: {i+1}/{t}')
+        print(f"sleeping: {i+1}/{t}")
         time.sleep(1)
 
-class TestUpdateConfig(unittest.TestCase):
 
+class TestUpdateConfig(unittest.TestCase):
     def test_update_config(self):
-        
-        filename = 'images/cloud.jpg'
+
+        filename = "images/cloud.jpg"
         pil_image = PIL.Image.open(filename)
 
-        c = Client(url = 'http://127.0.0.1:5656', username= 'test_abraham', verify_ssl=False)
+        c = Client(
+            url="http://127.0.0.1:5656", username="test_abraham", verify_ssl=False
+        )
 
         config = {
-            'prompt': 'let there be tests',
-            'number': 2233,
-            'input_image': Image(filename)  ## Image() supports jpg, png filenames, np.array or PIL.Image
+            "prompt": "let there be tests",
+            "number": 2233,
+            "input_image": Image(
+                filename
+            ),  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
 
         run_response = c.run(config)
-        token = run_response['token']
+        token = run_response["token"]
 
-        sleep_and_count(t = 2)
+        sleep_and_count(t=2)
 
         new_config = {
-            'prompt': 'updated prompt',
-            'number': 3322,
-            'input_image': Image(filename)  ## Image() supports jpg, png filenames, np.array or PIL.Image
+            "prompt": "updated prompt",
+            "number": 3322,
+            "input_image": Image(
+                filename
+            ),  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
-        resp = c.update_config(token = token, config = new_config)
-        
+        resp = c.update_config(token=token, config=new_config)
+
         ## chekcing if config was updated successfully
-        ideal_status = 'successfully updated config'
-        self.assertTrue(resp['status'], ideal_status)
+        ideal_status = "successfully updated config"
+        self.assertTrue(resp["status"], ideal_status)
 
         ## checking if the task is still running
-        resp = c.fetch(token = token)
-        ideal_status_running = 'running'
-        ideal_status_starting = 'starting'
-        print(resp['status'])
+        resp = c.fetch(token=token)
+        ideal_status_running = "running"
+        ideal_status_starting = "starting"
+        print(resp["status"])
         self.assertTrue(
-            (resp['status']['status'] == ideal_status_running) or (resp['status']['status'] == ideal_status_starting)
+            (resp["status"]["status"] == ideal_status_running)
+            or (resp["status"]["status"] == ideal_status_starting)
         )
 
         ## making sure the update config is what its supposed to be
         ideal_config = {
-            'prompt': 'updated prompt',
-            'number': 3322,
-            'input_image': pil_image  ## Image() supports jpg, png filenames, np.array or PIL.Image
+            "prompt": "updated prompt",
+            "number": 3322,
+            "input_image": pil_image,  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
         print(resp)
-        self.assertTrue(resp['config'], ideal_config)
+        self.assertTrue(resp["config"], ideal_config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sleep_and_count(5)
     unittest.main()

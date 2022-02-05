@@ -1,8 +1,9 @@
 from redis import Redis
 from .utils import dict_to_bytes, bytes_to_dict
 
-class ResultStorage(object): 
-    def __init__(self, redis_host, redis_port, redis_db = 1): 
+
+class ResultStorage(object):
+    def __init__(self, redis_host, redis_port, redis_db=1):
         """Wrapper over redis to fetch and store results.
 
         Args:
@@ -12,11 +13,9 @@ class ResultStorage(object):
         """
 
         self.redis = self.redis = Redis(
-            host= redis_host,
-            port= str(redis_port),
-            db = redis_db
+            host=redis_host, port=str(redis_port), db=redis_db
         )
-        
+
         self.redis.ping()
 
     def add(self, token, encoded_results: dict):
@@ -24,11 +23,8 @@ class ResultStorage(object):
         success = True
 
         # try:
-        self.redis.set(
-            token,
-            dict_to_bytes(encoded_results)
-        )
-        # except: 
+        self.redis.set(token, dict_to_bytes(encoded_results))
+        # except:
         #     success = False
 
         return success

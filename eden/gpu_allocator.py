@@ -2,6 +2,7 @@ import nvidia_smi
 
 from .log_utils import Colors
 
+
 class GPUAllocator(object):
     def __init__(self, exclude_gpu_ids: list = []):
         """
@@ -10,7 +11,7 @@ class GPUAllocator(object):
         g = GPUAllocator()
         gpu_id = g.get_gpu()
 
-        ## do something with gpu_id 
+        ## do something with gpu_id
 
         g.set_as_free(gpu_id)
 
@@ -19,13 +20,13 @@ class GPUAllocator(object):
         nvidia_smi.nvmlInit()
 
         self.num_gpus = nvidia_smi.nvmlDeviceGetCount()
-        self.gpu_names =  []
+        self.gpu_names = []
 
         for i in range(self.num_gpus):
             if i in exclude_gpu_ids:
                 pass
             else:
-                self.gpu_names.append('cuda:' +  str(i))
+                self.gpu_names.append("cuda:" + str(i))
 
         self.usage = {}
 
@@ -52,7 +53,15 @@ class GPUAllocator(object):
         
         """
 
-        print( "[" + Colors.CYAN+ "EDEN" +Colors.END+ "] " + 'Initialized GPUAllocator with devices: ', self.gpu_names)
+        print(
+            "["
+            + Colors.CYAN
+            + "EDEN"
+            + Colors.END
+            + "] "
+            + "Initialized GPUAllocator with devices: ",
+            self.gpu_names,
+        )
 
         """
         False: free 
@@ -61,18 +70,17 @@ class GPUAllocator(object):
 
     def set_as_occupied(self, name: str):
         """
-        True: occupied 
+        True: occupied
         """
         index = self.gpu_names.index(name)
-        self.usage[index]= True
+        self.usage[index] = True
 
     def set_as_free(self, name: str):
         """
-        False: free 
+        False: free
         """
         index = self.gpu_names.index(name)
-        self.usage[index]= False
-
+        self.usage[index] = False
 
     def get_gpu(self):
 
@@ -83,9 +91,9 @@ class GPUAllocator(object):
         else:
             for i in range(len(usage_values)):
                 if usage_values[i] == False:
-                    
+
                     gpu_name = self.gpu_names[i]
-                    self.set_as_occupied(name = gpu_name)
+                    self.set_as_occupied(name=gpu_name)
 
                     return gpu_name
 

@@ -7,7 +7,7 @@ import uvicorn
 class ThreadedServer(uvicorn.Server):
     """
     A neat way to run a uvicorn server in a new thread
-    Refer issue: 
+    Refer issue:
         https://github.com/encode/uvicorn/issues/742#issuecomment-674411676
     """
 

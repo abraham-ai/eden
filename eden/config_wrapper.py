@@ -1,12 +1,13 @@
 from .progress_tracker import ProgressTracker
 from .data_handlers import Encoder, Decoder
 
+
 class ConfigWrapper(object):
     """
-    Wrapper which acts a way to store both the input config got eden.block.Block.__run__() 
-    and some special components like gpu IDs and progress trackers. 
+    Wrapper which acts a way to store both the input config got eden.block.Block.__run__()
+    and some special components like gpu IDs and progress trackers.
 
-    refer: 
+    refer:
     https://github.com/abraham-ai/eden/issues/14
 
     Args:
@@ -16,8 +17,16 @@ class ConfigWrapper(object):
         progress (ProgressTracker, optional): If provided, can be used to update the progress of the job. Defaults to None.
         token (str, optional): Unique identifier behind each task run. Defaults to None.
     """
-    def __init__(self, data: dict, gpu: str, progress: ProgressTracker = None, token :str = None, result_storage = None):
-        
+
+    def __init__(
+        self,
+        data: dict,
+        gpu: str,
+        progress: ProgressTracker = None,
+        token: str = None,
+        result_storage=None,
+    ):
+
         self.data = data
         self.gpu = gpu
         self.progress = progress
@@ -25,8 +34,8 @@ class ConfigWrapper(object):
 
         self.decoder = Decoder()
         self.result_storage = result_storage
-        
-        self.__key_to_look_for_in_json_file__ = 'config'
+
+        self.__key_to_look_for_in_json_file__ = "config"
 
     def __getitem__(self, idx):
         """Used to access the input args of the function. Very much like a usual dictionary.
@@ -48,12 +57,9 @@ class ConfigWrapper(object):
         d = self.decoder.decode(self.result_storage.get(self.token))
 
         data = d[self.__key_to_look_for_in_json_file__]
-        
+
         if data != self.data:
             something_changed = True
             self.data = data
 
         return something_changed
-
-
-
