@@ -17,7 +17,7 @@ nvidia-ml-py3==7.352.0
 opencv-python==4.5.3.56
 Pillow==8.3.2
 prometheus-client==0.11.0
-prompt-toolkit==3.0.20
+prompt-toolkit
 pydantic==1.8.2
 pytz==2021.1
 redis==3.5.3
