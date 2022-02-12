@@ -89,7 +89,6 @@ After you start a task with `run()` as shown below, it returns a token as `run_r
 
 ```python
 config = {
-    'queue_name': 'celery', # specify block's queue if running multiple blocks
     'prompt': 'let there be light',
     'number': 2233,
     'input_image': Image('your_image.png')  ## Image() supports jpg, png filenames, np.array or PIL.Image
