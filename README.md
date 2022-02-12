@@ -9,7 +9,7 @@
 >
 > Ezekiel 28:13
 
-Eden is a sandbox for [the Abraham project](http://abraham.ai) to deploy pretty much any python function as a hosted endpoint.
+Eden helps you to deploy your AI art pipelines (or sometimes other stuff) as a hosted endpoint with support for multiple GPUs and scaling over multiple machines. If you're new here, check out the [examples](https://github.com/abraham-ai/eden#examples)
 
 ## Setting up a block
 
@@ -104,6 +104,11 @@ Fetching results/checking task status using the token can be done using `fetch()
 results = c.fetch(token = run_response['token'])
 print(results)
 ```
+
+## Examples
+
+- Hosting a Resnet18 inference endpoint with eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/client.py)
+- A very (very) minimal example which is good for starting out on eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/minimal/client.py)
 
 ## Prometheus metrics out of the box
 
