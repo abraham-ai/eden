@@ -7,7 +7,7 @@ with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
-    name="edenpy",
+    name="eden-py",
     version="0.0.1",
     author="Mayukh Deb, Gene Kogan",
     author_email="mayukhmainak2000@gmail.com, kogan.gene@gmail.com",
