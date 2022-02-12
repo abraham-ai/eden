@@ -7,11 +7,11 @@ with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
-    name="eden",
+    name="edenpy",
     version="0.0.1",
     author="Mayukh Deb, Gene Kogan",
     author_email="mayukhmainak2000@gmail.com, kogan.gene@gmail.com",
-    description="Convert your python function(s) into a hosted endpoint with minimal changes to your existing code",
+    description="Convert your python function into a hosted endpoint with minimal changes to your existing code",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/abraham-ai/eden",
