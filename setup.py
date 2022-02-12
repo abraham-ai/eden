@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="eden",
-    version="0.0.0",
+    version="0.0.1",
     author="Mayukh Deb, Gene Kogan",
     author_email="mayukhmainak2000@gmail.com, kogan.gene@gmail.com",
     description="Convert your python function(s) into a hosted endpoint with minimal changes to your existing code",
