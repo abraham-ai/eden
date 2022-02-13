@@ -11,6 +11,10 @@
 
 Eden helps you to deploy your AI art pipelines (or sometimes other stuff) as a hosted endpoint with support for multiple GPUs and scaling over multiple machines. If you're new here, check out the [examples](https://github.com/abraham-ai/eden#examples)
 
+```
+pip install eden-python
+```
+
 ## Setting up a block
 
 Hosting with `eden` requires minimal changes to your existing code. Each unit within `eden` is called a `Block`, they're the units which take certain inputs and generate art accordingly.
