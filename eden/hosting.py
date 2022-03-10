@@ -205,6 +205,10 @@ def host_block(
         redis_port=redis_port,
     )
 
+    ## set up result storage and data encoder for block
+    block.result_storage = result_storage
+    block.data_encoder = data_encoder
+
     """
     initiate a wrapper which handles 4 metrics for prometheus:
     * number of queued jobs
@@ -294,14 +298,7 @@ def host_block(
             if requires_gpu == True:
                 gpu_allocator.set_as_free(name=gpu_name)
 
-            output = data_encoder.encode(output)
-
-            output_from_storage = result_storage.get(token=token)
-            output_from_storage["output"] = output
-
-            success = result_storage.add(
-                encoded_results=output_from_storage, token=token
-            )
+            success = block.write_results(output=output, token=token)
 
             return success  ## return None because results go to result_storage instead
 

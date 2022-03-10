@@ -24,6 +24,34 @@ class Block(object):
         self.progress = progress
         self.name = name
 
+        ## extras
+        self.result_storage = None
+        self.data_encoder = None
+
+    def write_results(self, output: dict, token: str):
+        """Encodes and saves a dictionary of outputs into the result storage
+
+        Args:
+            output (dict): output from your eden pipeline
+            token (str): unique token to identify the task
+        """
+        assert (
+            self.result_storage != None
+        ), "block.result_storage is None, but expected an instance of eden.result_storage.ResultStorage"
+        assert (
+            self.data_encoder != None
+        ), "block.data_encoder is None, but expected an instance of eden.data_handlers.Encoder"
+
+        output = self.data_encoder.encode(output)
+
+        output_from_storage = self.result_storage.get(token=token)
+        output_from_storage["output"] = output
+        success = self.result_storage.add(
+            encoded_results=output_from_storage, token=token
+        )
+
+        return success
+
     def get_progress_bar(self, token: str, result_storage):
         self.progress_tracker = ProgressTracker(
             token=token, result_storage=result_storage
