@@ -5,3 +5,6 @@ results/
 results_client/
 __eden_queue__.json
 *.log
+build/
+dist/
+eden_python.egg-info/
