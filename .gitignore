@@ -8,3 +8,4 @@ __eden_queue__.json
 build/
 dist/
 eden_python.egg-info/
+examples/writing_intermediate_outputs/*.png
