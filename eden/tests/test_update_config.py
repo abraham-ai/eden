@@ -42,7 +42,7 @@ class TestUpdateConfig(unittest.TestCase):
         run_response = c.run(config)
         token = run_response["token"]
 
-        sleep_and_count(t=2)
+        sleep_and_count(t=1)
 
         new_config = {
             "prompt": "updated prompt",
@@ -57,22 +57,13 @@ class TestUpdateConfig(unittest.TestCase):
         ideal_status = "successfully updated config"
         self.assertTrue(resp["status"], ideal_status)
 
-        ## checking if the task is still running
-        resp = c.fetch(token=token)
-        ideal_status_running = "running"
-        ideal_status_starting = "starting"
-        print(resp["status"])
-        self.assertTrue(
-            (resp["status"]["status"] == ideal_status_running)
-            or (resp["status"]["status"] == ideal_status_starting)
-        )
-
         ## making sure the update config is what its supposed to be
         ideal_config = {
             "prompt": "updated prompt",
             "number": 3322,
             "input_image": pil_image,  ## Image() supports jpg, png filenames, np.array or PIL.Image
         }
+        resp = c.fetch(token=token)
         print(resp)
         self.assertTrue(resp["config"], ideal_config)
 
