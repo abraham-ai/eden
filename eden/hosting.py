@@ -413,11 +413,12 @@ def host_block(
 
                 results = result_storage.get(token=token)
                     
+                ## if results are deleted, it still returns the same schema
                 if results == None and remove_result_on_fetch == True:
                     response = {
                         "status": {
-                            'status': 'Result deleted because remove_result_on_fetch has been set to True',
-                        }
+                            "status": "removed"
+                        },
                     }
                 else:
                     response = {
@@ -425,6 +426,7 @@ def host_block(
                         "config": results["config"],
                         "output": results["output"],
                     }
+
 
 
                 if remove_result_on_fetch == True:
