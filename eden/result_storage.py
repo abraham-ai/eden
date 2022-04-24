@@ -35,3 +35,12 @@ class ResultStorage(object):
         if results is not None:
             results = bytes_to_dict(results)
         return results
+
+    def delete(self, token):
+        """Deletes a result from redis. Useful when we'll have tons of outputs
+        and we won't want to keep them after the user has fetched them
+
+        Args:
+            token (str): identifier token
+        """
+        self.redis.delete(token)

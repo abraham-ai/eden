@@ -51,6 +51,7 @@ def host_block(
     log_level="warning",
     logfile="logs.log",
     exclude_gpu_ids: list = [],
+    remove_result_on_fetch = False
 ):
     """
     Use this to host your eden.Block on a server. Supports multiple GPUs and queues tasks automatically with celery.
@@ -411,12 +412,23 @@ def host_block(
             elif status["status"] == "complete":
 
                 results = result_storage.get(token=token)
+                    
+                if results == None and remove_result_on_fetch == True:
+                    response = {
+                        "status": {
+                            'status': 'Result deleted because remove_result_on_fetch has been set to True',
+                        }
+                    }
+                else:
+                    response = {
+                        "status": status,
+                        "config": results["config"],
+                        "output": results["output"],
+                    }
 
-                response = {
-                    "status": status,
-                    "config": results["config"],
-                    "output": results["output"],
-                }
+
+                if remove_result_on_fetch == True:
+                    result_storage.delete(token=token)
 
             elif (
                 status["status"] == "queued"
