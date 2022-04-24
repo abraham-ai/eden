@@ -435,6 +435,36 @@ def host_block(
 
         return response
 
+    @app.post("/stop-task")
+    async def stop_task(credentials: Credentials):
+        """
+        Stops a running task. Ignores if task is already complete.
+
+        Args:
+            credentials (Credentials): should contain a token that points to a task
+        """
+        # from celery.task.control import revoke
+
+        status = queue_data.get_status(token=credentials.token)
+
+        if status["status"] != "invalid token":
+
+            if status["status"] == "running" or status["status"] == "queued":
+
+                # celery_app.control.revoke(
+                #     credentials.token, terminate=True, signal="SIGKILL"
+                # )
+
+                from celery.app import default_app
+
+                revoked = default_app.control.revoke(
+                    credentials.token, terminated=True, signal="SIGKILL"
+                )
+                print(revoked)
+            return {"status": "stopped"}
+        else:
+            return status
+
     @app.post("/stop")
     async def stop(wait_for: WaitFor):
         """

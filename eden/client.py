@@ -155,6 +155,17 @@ class Client(object):
 
         return resp
 
+    def stop_task(self, token: str):
+        config = {"token": token}
+        resp = requests.post(
+            self.url + "/stop-task",
+            timeout=self.timeout,
+            json=config,
+            verify=self.verify_ssl,
+        )
+
+        return resp.json()
+
     def stop_host(self, time=10):
         """
         Stops a running block remotely after `time` seconds.
