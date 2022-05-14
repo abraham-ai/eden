@@ -19,17 +19,28 @@ class ResultStorage(object):
         self.redis.ping()
 
     def add(self, token, encoded_results: dict):
+        """Adds in json-like results into the redis storage.
 
-        success = True
+        Args:
+            token (str): unique identifier for each task
+            encoded_results (dict): your results encoded using something like: eden.data_handlers.Encoder
 
-        # try:
+        Returns:
+            None
+        """
         self.redis.set(token, dict_to_bytes(encoded_results))
-        # except:
-        #     success = False
-
-        return success
+        return None
 
     def get(self, token):
+        """Tries to fetch results corresponding to a given token from redis
+        if there's no such result then it returns None. Also used to obtain intermediate results.
+
+        Args:
+            token (str): unique identifier for each task
+
+        Returns:
+            dict or None: results from redis
+        """
 
         results = self.redis.get(token)
         if results is not None:
@@ -41,6 +52,6 @@ class ResultStorage(object):
         and we won't want to keep them after the user has fetched them
 
         Args:
-            token (str): identifier token
+            token (str):  unique identifier for each task
         """
         self.redis.delete(token)
