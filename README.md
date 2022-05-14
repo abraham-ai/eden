@@ -112,6 +112,7 @@ print(results)
 
 - Hosting a Resnet18 inference endpoint with eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/client.py)
 - A very (very) minimal example which is good for starting out on eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/minimal/client.py)
+- Working with intermediate results: [server](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/server.py) [client](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/client.py)
 
 ## Prometheus metrics out of the box
 
