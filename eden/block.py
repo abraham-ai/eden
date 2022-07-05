@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from pydantic import create_model
-from .datatypes import Image
+from .datatypes import Image, Video
 from .progress_tracker import ProgressTracker
 
 
@@ -43,7 +43,6 @@ class Block(object):
         ), "block.data_encoder is None, but expected an instance of eden.data_handlers.Encoder"
 
         output = self.data_encoder.encode(output)
-
         output_from_storage = self.result_storage.get(token=token)
         output_from_storage["output"] = output
         success = self.result_storage.add(
@@ -64,11 +63,14 @@ class Block(object):
 
         It includes:
         * eden.datatypes.Image: wraps PIL images, numpy arrays and image files (str)
+        * eden.datatypes.Video: wraps video files (str)
 
         """
 
         for key, value in self.default_args.items():
             if isinstance(value, Image):
+                self.default_args[key] = value.encode()
+            if isinstance(value, Video):
                 self.default_args[key] = value.encode()
 
     def build_pydantic_model(self):
@@ -90,7 +92,7 @@ class Block(object):
         Run decorator which defines the function to run on each request from a client.
 
         Args:
-            args (dict): Specifies the arguments which are to be used in the decorated function. When using special dataypes like images, make sure you use eden.datatypes.Image.
+            args (dict): Specifies the arguments which are to be used in the decorated function. When using special dataypes like images or videos, make sure you use eden.datatypes.Image or eden.datatypes.Video.
 
         Example:
 

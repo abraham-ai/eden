@@ -11,7 +11,7 @@ from prometheus_client import Gauge
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.middleware.cors import CORSMiddleware
 
-from .datatypes import Image
+from .datatypes import Image, Video
 from .queue import QueueData
 from .log_utils import Colors
 from .models import Credentials, WaitFor

@@ -1,6 +1,6 @@
-from eden.image_utils import decode
+from eden.image_utils import decode_image, decode_video
 
-from eden.datatypes import Image
+from eden.datatypes import Image, Video
 
 
 class Decoder(object):
@@ -9,14 +9,21 @@ class Decoder(object):
         ## when you add more datatypes,
         ## update this map and add the new method below
         self.type_name_to_method_mapping = {
-            "eden.datatypes.Image": self.decode_image_data
+            "eden.datatypes.Image": self.decode_image_data,
+            "eden.datatypes.Video": self.decode_video_data
         }
 
     def decode_image_data(self, data: str):
         """
         converts str to pil image
         """
-        return decode(data)
+        return decode_image(data)
+
+    def decode_video_data(self, data: str):
+        """
+        converts str to video
+        """
+        return decode_video(data)
 
     def decode(self, data):
         """
@@ -47,6 +54,7 @@ class Encoder(object):
         ## update this list
         self.datatypes_to_encode = [
             Image,
+            Video
         ]
 
     def encode(self, data: dict):

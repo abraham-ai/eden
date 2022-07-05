@@ -1,4 +1,4 @@
-from .image_utils import encode
+from .image_utils import encode_image, encode_video
 
 
 class BaseDataType(object):
@@ -20,7 +20,7 @@ class BaseDataType(object):
 class Image(BaseDataType):
     def __init__(self, image=None):
         """
-        Wrapper to store/send images to and fro from an eden server.
+        Wrapper to store/send images to and from from an eden server.
 
         Args:
             image (numpy.array or PIL.Image or str, optional): Image to be stored. Defaults to None.
@@ -30,6 +30,24 @@ class Image(BaseDataType):
         self.type = "eden.datatypes.Image"
 
         if image is not None:
-            self.data = encode(image)
+            self.data = encode_image(image)
+        else:
+            pass
+
+
+class Video(BaseDataType):
+    def __init__(self, video=None):
+        """
+        Wrapper to store/send videos to and from from an eden server.
+
+        Args:
+            video (str, optional): Video to be stored. Defaults to None.
+        """
+        super().__init__()
+
+        self.type = "eden.datatypes.Video"
+
+        if video is not None:
+            self.data = encode_video(video)
         else:
             pass
