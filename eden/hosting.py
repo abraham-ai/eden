@@ -1,5 +1,6 @@
 import os
 import sys
+import git
 import json
 import warnings
 import uvicorn
@@ -460,6 +461,24 @@ def host_block(
         logging.info(f"Stopping gracefully in {wait_for.seconds} seconds")
         stop_everything_gracefully(t=wait_for.seconds)
 
+    @app.post("/get_identity")
+    def get_identity():
+        """
+        Returns name and active commit hash of the generator
+        """
+
+        repo = git.Repo(search_parent_directories=True)
+        name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+        sha = repo.head.object.hexsha
+
+        response = {
+            "name": name,
+            "commit": sha
+        }
+
+        return response
+
+
     ## overriding the boring old [INFO] thingy
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = (
         "[" + Colors.CYAN + "EDEN" + Colors.END + "] %(asctime)s %(message)s"
@@ -495,3 +514,4 @@ def host_block(
     message = PREFIX + " Stopped"
 
     print(message)
+

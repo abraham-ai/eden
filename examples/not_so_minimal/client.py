@@ -5,6 +5,10 @@ from eden.datatypes import Image
 ## set up a client
 c = Client(url="http://0.0.0.0:5656", username="abraham")
 
+# get server's identity
+generator_id = c.get_generator_identity()
+print(generator_id)
+
 ## define input args to be sent
 config = {
     "width": 224,  ## width

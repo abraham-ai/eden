@@ -24,6 +24,29 @@ class Client(object):
         self.encoder = Encoder()
         self.decoder = Decoder()
 
+    def get_generator_identity(self):
+        """
+        Sends a request to the host to get the name and current commit hash of the generator.
+
+        Raises:
+            json.decoder.JSONDecodeError: If an invalid json is returned which cannot be decoded.
+
+        Returns:
+            dict: {'name': 'name', 'commit': commit_hash}
+        """
+
+        resp = requests.post(
+            self.url + "/get_identity", timeout=self.timeout, verify=self.verify_ssl
+        )
+
+        try:
+            resp = resp.json()
+        except json.decoder.JSONDecodeError:
+            raise Exception("got invalid response from host: \n", str(resp))
+
+        resp = self.decoder.decode(resp)
+        return resp
+
     def run(self, config):
         """
         Sends a request to the host to run a job with the configuration mentioned in config.

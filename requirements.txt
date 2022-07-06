@@ -8,6 +8,7 @@ click==7.1.2
 click-didyoumean==0.0.3
 click-plugins==1.1.1
 click-repl==0.2.0
+gitpython
 fastapi==0.68.1
 h11==0.12.0
 idna==3.2
