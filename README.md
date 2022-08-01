@@ -112,7 +112,7 @@ print(results)
 
 - Hosting a Resnet18 inference endpoint with eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/client.py)
 - A very (very) minimal example which is good for starting out on eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/minimal/client.py)
-- Working with intermediate results: [server](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/server.py) [client](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/client.py)
+- Working with intermediate results: [server](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/writing_intermediate_outputs/client.py)
 
 ## Prometheus metrics out of the box
 
@@ -122,3 +122,33 @@ Eden supports the following internal metrics (`/metrics`) which have been expose
 * `num_running_jobs`: Specifies the number of running jobs
 * `num_failed_jobs`: Specifies the number of failed jobs
 * `num_succeeded_jobs`: Specifies the number of succeeded jobs
+
+## Development
+
+Setup 
+```
+git clone git@github.com:abraham-ai/eden.git
+cd eden
+python3 setup.py develop
+```
+Compile dependencies with pip-compile (this generates a `requirements.txt` file). You will need `pip-tools` installed for this to work (`pip install pip-tools`)
+```
+pip-compile requirements.in
+```
+
+You also have to install redis on your machine
+```
+sudo apt-get install redis-server
+sudo service redis-server start
+```
+
+Optionally, if you want to stop redis after you're done then you can run:
+
+```
+sudo service redis-server stop
+```
+
+Runnning tests on your local machine can be done with:
+```
+sh test_local.sh
+```
