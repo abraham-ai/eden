@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pillow
+opencv-python
+gitpython
+prometheus-client
+celery
+nvidia-ml-py3
+redis
+requests
+tqdm
+starlette-exporter
