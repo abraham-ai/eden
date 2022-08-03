@@ -108,6 +108,12 @@ results = c.fetch(token = run_response['token'])
 print(results)
 ```
 
+You can also get the commit ID and the repo name of your hosted `eden_block` with the following snippet
+```python
+generator_id = c.get_generator_identity()
+print(generator_id) ## {"name": repo_name, "commit": commit_sha}
+``` 
+
 ## Examples
 
 - Hosting a Resnet18 inference endpoint with eden: [server](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/server.py) + [client](https://github.com/abraham-ai/eden/blob/master/examples/not_so_minimal/client.py)
