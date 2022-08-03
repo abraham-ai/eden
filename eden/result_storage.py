@@ -1,3 +1,4 @@
+import redis
 from redis import Redis
 from .utils import dict_to_bytes, bytes_to_dict
 
@@ -16,7 +17,15 @@ class ResultStorage(object):
             host=redis_host, port=str(redis_port), db=redis_db
         )
 
-        self.redis.ping()
+        try:
+            self.redis.ping()
+        except redis.exceptions.ConnectionError as e:
+            raise Exception(
+                f'''Could not connect to redis on host: {redis_host} port: {redis_port} db: {redis_db}
+                Maybe you did not start a redis-server yet?
+                $ sudo apt-get install redis-server
+                $ sudo service redis-server start'''
+            ) from e
 
     def add(self, token, encoded_results: dict):
         """Adds in json-like results into the redis storage.
