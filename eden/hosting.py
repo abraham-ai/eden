@@ -1,12 +1,8 @@
 import os
-import sys
 import git
-import json
 import warnings
 import uvicorn
 import logging
-import threading
-import traceback
 from fastapi import FastAPI
 from prometheus_client import Gauge
 from starlette_exporter import PrometheusMiddleware, handle_metrics
@@ -32,7 +28,6 @@ from uvicorn.config import LOGGING_CONFIG
 Celery+redis is needed to be able to queue tasks
 """
 from celery import Celery
-from celery.result import AsyncResult
 from .celery_utils import run_celery_app
 
 """
