@@ -35,6 +35,8 @@ tool to allocate gpus on queued tasks
 """
 from .gpu_allocator import GPUAllocator
 
+from .webhook import WebHook
+
 
 def host_block(
     block,
@@ -47,7 +49,8 @@ def host_block(
     log_level="warning",
     logfile="logs.log",
     exclude_gpu_ids: list = [],
-    remove_result_on_fetch = False
+    remove_result_on_fetch = False,
+    webhook: WebHook = None
 ):
     """
     Use this to host your eden.Block on a server. Supports multiple GPUs and queues tasks automatically with celery.
@@ -296,6 +299,10 @@ def host_block(
                 gpu_allocator.set_as_free(name=gpu_name)
 
             success = block.write_results(output=output, token=token)
+
+            print('sending webhook!!')
+            if webhook is not None:
+                resp = webhook(output)
 
             return success  ## return None because results go to result_storage instead
 
