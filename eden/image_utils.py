@@ -2,6 +2,7 @@ import PIL
 import cv2
 import base64
 import numpy as np
+import PIL.Image
 from PIL import Image
 from io import BytesIO
 
@@ -43,7 +44,7 @@ def encode(image):
             (
                 PIL.JpegImagePlugin.JpegImageFile,
                 PIL.PngImagePlugin.PngImageFile,
-                PIL.Image,
+                PIL.Image.Image,
             ),
         )
     ):
