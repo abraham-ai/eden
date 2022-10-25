@@ -67,5 +67,7 @@ def encode(image):
 
 
 def decode(jpg_as_text):
+    if jpg_as_text is None:
+        return None
     pil_image = Image.open(BytesIO(base64.b64decode(jpg_as_text)))
     return pil_image
