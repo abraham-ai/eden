@@ -462,7 +462,7 @@ def host_block(
         Returns name and active commit hash of the generator
         """
         try:
-            repo = git.Repo(search_parent_directories=True, bare=True)
+            repo = git.Repo(search_parent_directories=True)
             name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
             sha = repo.head.object.hexsha
         except git.exc.InvalidGitRepositoryError:
