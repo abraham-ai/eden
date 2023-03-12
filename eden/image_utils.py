@@ -2,7 +2,9 @@ import PIL
 import cv2
 import base64
 import numpy as np
-import PIL.Image
+from PIL.Image import Image as ImageFile
+from PIL.JpegImagePlugin import JpegImageFile
+from PIL.PngImagePlugin import PngImageFile
 from PIL import Image
 from io import BytesIO
 
@@ -42,9 +44,9 @@ def encode(image):
         or isinstance(
             image,
             (
-                PIL.JpegImagePlugin.JpegImageFile,
-                PIL.PngImagePlugin.PngImageFile,
-                PIL.Image.Image,
+                JpegImageFile,
+                PngImageFile,
+                ImageFile,
             ),
         )
     ):
